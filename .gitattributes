@@ -1,0 +1,8 @@
+# 모든 텍스트 파일 — LF로 통일 (Windows CRLF 경고 제거)
+* text=auto eol=lf
+
+# 바이너리
+*.png binary
+*.ico binary
+*.jpg binary
+*.woff2 binary
