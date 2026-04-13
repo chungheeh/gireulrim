@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+
+  /* 길울림 브랜드 컬러 */
+  --color-brand-orange:    #f97316; /* orange-500 */
+  --color-brand-orange-dk: #ea580c; /* orange-600 — hover */
+  --color-brand-navy:      #0f172a; /* slate-950 */
+  --color-brand-navy-2:    #1e293b; /* slate-800 — 카드/nav 배경 */
+  --color-brand-navy-3:    #334155; /* slate-700 — 구분선 */
+  --color-surface:         #1e293b;
+  --color-surface-2:       #0f172a;
+  --color-muted:           #94a3b8; /* slate-400 */
+  --color-muted-2:         #64748b; /* slate-500 */
+}
+
+/* 전역 다크 앱 배경 */
+html, body {
+  background-color: #0f172a;
+  color: #f1f5f9; /* slate-100 */
+  font-family: var(--font-geist-sans), "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+/* iOS safe-area 대응 */
+:root {
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* 스크롤바 최소화 (모바일 PWA) */
+::-webkit-scrollbar { width: 0; background: transparent; }
