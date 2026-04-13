@@ -205,6 +205,11 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
 - **해결**: 하위 디렉터리 `gireulrim` 지정하여 생성
 - **교훈**: 한국어/특수문자 경로에서 create-next-app은 하위 폴더 필수
 
+### [2026-04-13] middleware → proxy 이전 (Next.js 16)
+- **문제**: `src/middleware.ts` 사용 시 빌드 경고 — `"middleware" file convention is deprecated. Please use "proxy" instead.`
+- **해결**: `src/proxy.ts`로 파일명 변경 + 함수명 `middleware` → `proxy`로 변경
+- **교훈**: Next.js 16에서 인증/라우팅 가드는 `proxy.ts` + `export function proxy()` 사용. `middleware.ts` 금지
+
 ### [2026-04-13] next-pwa deprecated
 - **문제**: `next-pwa@5.6.0`이 workbox 6.x(deprecated)에 의존
 - **해결**: `app/manifest.ts` + `public/sw.js` 네이티브 방식으로 대체

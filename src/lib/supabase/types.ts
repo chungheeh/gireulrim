@@ -14,14 +14,29 @@ export interface Database {
           id: string;
           name: string;
           role: UserRole;
+          part: string | null;
           preferred_genre: string[] | null;
           vocal_range: string | null;
+          signature_song: string | null;
+          bio: string | null;
           current_credits: number;
           can_give_lesson: boolean;
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["users"]["Row"], "created_at">;
+        Insert: {
+          id: string;
+          name: string;
+          role?: UserRole;
+          part?: string | null;
+          preferred_genre?: string[] | null;
+          vocal_range?: string | null;
+          signature_song?: string | null;
+          bio?: string | null;
+          current_credits?: number;
+          can_give_lesson?: boolean;
+        };
         Update: Partial<Database["public"]["Tables"]["users"]["Insert"]>;
+        Relationships: [];
       };
       songs: {
         Row: {
@@ -37,6 +52,7 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["songs"]["Row"], "id" | "created_at">;
         Update: Partial<Database["public"]["Tables"]["songs"]["Insert"]>;
+        Relationships: [];
       };
       schedules: {
         Row: {
@@ -49,6 +65,7 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["schedules"]["Row"], "id" | "created_at">;
         Update: Partial<Database["public"]["Tables"]["schedules"]["Insert"]>;
+        Relationships: [];
       };
       attendances: {
         Row: {
@@ -60,6 +77,7 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["attendances"]["Row"], "id" | "created_at">;
         Update: Partial<Database["public"]["Tables"]["attendances"]["Insert"]>;
+        Relationships: [];
       };
       credit_transactions: {
         Row: {
@@ -73,6 +91,7 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["credit_transactions"]["Row"], "id" | "created_at">;
         Update: Partial<Database["public"]["Tables"]["credit_transactions"]["Insert"]>;
+        Relationships: [];
       };
       refund_requests: {
         Row: {
@@ -85,7 +104,12 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["refund_requests"]["Row"], "id" | "created_at">;
         Update: Partial<Database["public"]["Tables"]["refund_requests"]["Insert"]>;
+        Relationships: [];
       };
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
   };
 }
