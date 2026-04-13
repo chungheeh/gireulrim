@@ -32,7 +32,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ko" className={geistSans.variable}>
-      <body className="antialiased">
+      <body className="antialiased bg-white text-gray-900">
         <ServiceWorkerRegister />
         {children}
       </body>

@@ -8,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
       "퇴근 후, 길 위에서 음악으로 이어지는 순간. 직장인 보컬 소모임 길울림.",
     start_url: "/",
     display: "standalone",
-    background_color: "#0f172a",
-    theme_color: "#7c3aed",
+    background_color: "#ffffff",
+    theme_color: "#4a6741",
     orientation: "portrait",
     icons: [
       {

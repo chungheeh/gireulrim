@@ -1,64 +1,169 @@
 @AGENTS.md
 
+> **Claude 필독:** 이 파일을 매 작업 시작 전 반드시 전체 읽고 시작한다. 브랜드, 비즈니스 모델, 워크플로우 규칙 모두 구현에 반영되어야 한다.
+
+---
+
 # 길울림 (Street Resonance) — PWA MVP
 
-## 프로젝트 정체성
+## 브랜드 아이덴티티
 
-직장인 보컬 소모임 '길울림'의 PWA 앱. 퇴근 후 부담 없이 합주하고 버스킹을 만들어가는 모임을 위한 플랫폼.
+- **정식 명칭:** 길울림밴드
+- **영문:** STREET RESONANCE
+- **슬로건:** 2030 보컬동아리
+- **로고 컬러:** 올리브 그린 `#4a6741` + 블랙 + 화이트
+- **앱 UI 컬러 시스템:**
+  - 배경: **화이트** `#ffffff`
+  - 키 컬러: **올리브 그린** `#4a6741`
+  - 포인트 1: **보라** `#7c3aed`
+  - 포인트 2: **노랑** `#fbbf24`
+  - 글씨: **블랙** `#111111`
+  - 서브텍스트: `#6b7280` (gray-500)
+  - 카드/구분선: `#f3f4f6` (gray-100)
 
-**톤앤매너:** 따뜻하고 부담 없으며 직장인들을 위로하는 친절한 말투. 모든 안내 문구에 일관되게 적용.
+**톤앤매너:** 따뜻하고 부담 없으며 직장인들을 위로하는 친절한 말투. 모든 안내 문구에 일관 적용.
 
-## 핵심 비즈니스 룰
+---
 
-| 규칙 | 값 |
+## 비즈니스 모델 & 서비스 로직
+
+### 타겟
+- **20-30대 직장인** 보컬 소모임
+- 장르: 8090 발라드, 어쿠스틱, 인디, 대중가요 중심
+
+### 수익 & 운영 모델
+| 항목 | 내용 |
 |---|---|
-| 타겟 장르 | 대중가요, 인디, 어쿠스틱 (기본 추천 태그) |
-| 정기 모임 참가비 (`is_large_event: false`) | **9,000 크레딧** (하드코딩 기본값) |
-| 대형 이벤트 참가비 (`is_large_event: true`) | 0 또는 관리자 수동 입력 |
-| 포인트 레슨 | 보컬 초보 대상, `[포인트 레슨 가능]` / `[레슨 요청]` 뱃지 UI 필수 |
+| 정기 모임 참가비 | **9,000원** (계좌이체 후 입금확인증 업로드 방식) |
+| 대형 이벤트(버스킹 등) | 0원 또는 관리자 수동 공지 |
+| 결제 방식 | **PG사 없음** — 계좌 안내 + 입금 캡처 업로드 → 관리자 승인 |
+| 포인트 레슨 | 보컬 초보 대상, `can_give_lesson` 필드, `[레슨 가능]` 뱃지 |
+
+### MVP에서 제외할 기능
+- 실시간 채팅 (카카오톡 병행 사용)
+- 복잡한 Q&A 게시판 (구글 폼 또는 관리자 DM으로 대체)
+- PG사 결제 연동
+
+---
+
+## 핵심 기능 명세
+
+### 1. 회원 (일반 유저)
+
+**가입 플로우:** 구글 소셜 로그인 → 추가 프로필 입력 (필수)
+- 나이 / 성별
+- 지원 파트: `보컬 / 기타 / 퍼커션 / 키보드`
+- 보유 악기 여부
+- 선호 장르 (8090 발라드, 어쿠스틱, 인디 등 다중 선택)
+- 음역대 (고음 / 중저음 등)
+- 18번 곡 (자유 입력)
+
+**홈 (메인 피드):**
+- 상단 배너: 길울림 소개 또는 이번 달 버스킹 목표 슬라이드
+- 다가오는 일정 카드: [참석] / [불참] 토글 버튼 + 참석 시 "연습할 곡 메모" 팝업
+- 최근 소식 피드 (가벼운 인사글, 연습 후기, 유튜브 링크)
+
+**선곡/연습 게시판 (Songs):**
+- 뱃지: `[솔로]` `[듀엣 모집]` `[단체곡]`
+- 게시글: 곡 제목/아티스트, 유튜브 링크(썸네일 미리보기), MR 파일, 가사, 키 정보
+- 카드형 목록: 유튜브 썸네일 + [MR 재생] + [가사 보기]
+- 가사 보기 시 미니 플레이어 동시 재생 (카카오뮤직 스타일)
+- 탭: "이번 주 합주곡" / "내 보관함"
+
+**멤버 (Members):**
+- 카카오톡 친구 목록 스타일
+- 상단: 내 프로필 크게
+- 이름 옆: 파트 아이콘 (🎤 보컬, 🎸 기타 등)
+- 상태 메시지 위치: 좋아하는 가수 또는 주력 장르 한 줄
+- 프로필 탭: 나이, 선호 장르, 18번 곡, 자기소개 팝업
+- `[포인트 레슨 가능]` / `[레슨 요청]` 뱃지
+
+**MY (마이페이지):**
+- 프로필 수정 (파트, 장르, 18번 곡 등)
+- 회비 납부 현황: 입금 대기 / 승인 완료 상태
+- 참석 내역: 이번 달 합주 참석 횟수 (도장 UI)
+- 건의사항: 관리자 DM 폼 (심플)
+
+### 2. 운영진 (관리자)
+
+**참석 현황 대시보드:**
+- 파트별 참석 비율 (보컬만 오는 상황 방지)
+- 주 단위 출석부
+
+**회비 납부 관리:**
+- 멤버가 올린 입금 캡처 확인 → [승인] / [반려]
+- 미납자 필터링
+
+**선곡 확정 기능:**
+- 멤버 선곡 리스트에서 [버스킹 확정] → 자동 셋리스트 페이지 생성
+- 확정 곡 MR 일괄 다운로드 (플레이리스트 관리)
+
+**권한 관리 (ReBAC):**
+- 역할: `admin` / `member`
+- 그룹 단위: "이번 달 버스킹 참여조", "평일반/주말반"
+- 그룹별 게시판 읽기/쓰기 권한 제어
+
+### 3. 미디어 아카이브
+- 버스킹/연습 영상·사진 갤러리
+- 소속감 및 잔존율 향상 목적
+
+---
+
+## 하단 탭 바 (GNB 4탭)
+
+| 탭 | 경로 | 아이콘 | 핵심 기능 |
+|---|---|---|---|
+| 홈 | `/` | 🏠 | 공지 배너, 일정 카드(참석 토글), 소식 피드 |
+| 선곡/연습 | `/songs` | 🎤 | MR·가사 게시판, 듀엣 모집, 셋리스트 |
+| 멤버 | `/members` | 👥 | 카카오톡 친구목록 스타일, 파트 아이콘 |
+| MY | `/mypage` | 👤 | 프로필, 회비 현황, 참석 도장 |
+
+---
 
 ## 테크 스택
 
 - **Frontend:** Next.js 16 (App Router), Tailwind CSS v4, shadcn/ui
 - **Backend:** Supabase (Auth, PostgreSQL, Storage)
-- **PWA:** Next.js 16 네이티브 방식 (`app/manifest.ts` + `public/sw.js`)
-  - `next-pwa` 플러그인 **사용 금지** — workbox 6.x 사용으로 deprecated
+- **Auth:** Supabase Google OAuth
+- **PWA:** Next.js 16 네이티브 (`app/manifest.ts` + `public/sw.js`)
+  - `next-pwa` 플러그인 **사용 금지** — workbox 6.x deprecated
 - **Icons:** lucide-react
 
-## PWA 설정 방식 (Next.js 16 네이티브)
+## PWA 설정 방식
 
-Next.js 16은 `next-pwa` 없이 자체 PWA를 지원한다:
 1. `app/manifest.ts` — Web App Manifest
 2. `public/sw.js` — 서비스 워커 (수동 등록)
-3. `src/app/layout.tsx`에서 SW 등록 클라이언트 컴포넌트 추가
+3. `ServiceWorkerRegister` 클라이언트 컴포넌트로 layout에서 등록
 
 ## DB 스키마 요약
 
 ```
-users             — id, name, role, preferred_genre, vocal_range, current_credits
-songs             — id, title, artist, youtube_url, mr_file_url, lyrics, user_id, is_busking_selected
-schedules         — id, title, date, participation_fee, is_large_event
-attendances       — id, schedule_id, user_id, status
+users             — id, name, role, part, preferred_genre, vocal_range, signature_song, can_give_lesson, current_credits
+songs             — id, title, artist, youtube_url, mr_file_url, lyrics, song_key, tag(솔로/듀엣/단체), user_id, is_busking_selected
+schedules         — id, title, date, participation_fee(default 9000), is_large_event
+attendances       — id, schedule_id, user_id, status, practice_note
 credit_transactions — id, user_id, type, amount, balance_after, description
 refund_requests   — id, user_id, schedule_id, reason, status
+payment_proofs    — id, user_id, schedule_id, image_url, status(pending/approved/rejected)
 ```
 
 스키마 파일: `supabase/schema.sql`
 
 ## 환경변수
 
-`.env.local` 파일 필요 (`.env.local.example` 참고):
 ```
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_SUPABASE_URL=https://mqkrchjvgzswlttjtmlz.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
 ```
 
 ## 개발 주의사항
 
-1. `next.config.ts`는 `export default` ESM 형식 사용 (`.cjs`/`.cts` 미지원)
-2. Tailwind v4는 `tailwind.config.js` 불필요 — CSS에서 직접 설정
-3. 서버 컴포넌트에서 `'use client'` 없이 Supabase 호출 시 `@supabase/ssr` 사용
-4. RLS(Row Level Security)는 모든 테이블에 활성화 필수
+1. `next.config.ts` — `export default` ESM 형식 (`cts`/`cjs` 미지원)
+2. Tailwind v4 — `tailwind.config.js` 불필요, CSS `@theme` 블록에서 직접 설정
+3. 서버 컴포넌트 Supabase — `@supabase/ssr`의 `createServerClient` 사용
+4. RLS — 모든 테이블 활성화 필수
+5. **UI 색상** — 화이트 배경, 올리브 그린 키 컬러, 보라 포인트, 노랑 포인트, 블랙 텍스트
+6. **결제** — PG사 없음. 계좌이체 + 입금 캡처 업로드 방식
 
 ---
 
@@ -76,34 +181,31 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 ### 규칙 2: 워크트리 에이전트 병렬 작업
 
 독립적인 작업은 `isolation: "worktree"` 워크트리 에이전트로 병렬 실행한다.
-적용 기준:
 - DB 마이그레이션 ↔ 컴포넌트 구현 → **병렬 가능**
 - 페이지 A 구현 ↔ 페이지 B 구현 → **병렬 가능**
 - 구현 완료 → 빌드 검증 → **순차 필요**
 
 ### 규칙 3: 구현 / 검증 에이전트 분리
 
-모든 기능 구현은 두 단계로 나눈다:
-
-| 단계 | 에이전트 역할 | 수행 작업 |
+| 단계 | 에이전트 | 수행 작업 |
 |---|---|---|
-| 1 | **구현 에이전트** | 코드 작성, 파일 생성/수정 |
-| 2 | **검증 에이전트** | `tsc --noEmit`, `npm run build`, 로직 검증 |
+| 1 | **구현** | 코드 작성, 파일 생성/수정 |
+| 2 | **검증** | `tsc --noEmit`, `npm run build`, 로직 검증 |
 
-검증 에이전트가 실패를 발견하면 → 에러 로그에 기록 후 구현 에이전트에 피드백.
+검증 실패 → 에러 로그 기록 → 구현 에이전트에 피드백.
 
 ---
 
 ## 에러 로그
 
-<!-- 에러 발생 시 아래에 추가 (최신순) -->
+<!-- 최신순으로 추가 -->
 
 ### [2026-04-13] create-next-app 한국어 경로 오류
-- **문제**: `C:\Street 길울림` 디렉터리에서 `npx create-next-app@latest .` 실행 시 npm 명명 규칙(대문자·비URL문자 불가) 오류로 실패
-- **해결**: 유효한 이름의 하위 디렉터리 `gireulrim`을 지정해 생성 (`npx create-next-app@latest gireulrim`)
-- **교훈**: 한국어/특수문자 포함 경로에서 `create-next-app`은 하위 폴더 지정 필수
+- **문제**: `C:\Street 길울림` 경로에서 `npx create-next-app@latest .` 실행 시 npm 명명 규칙 오류
+- **해결**: 하위 디렉터리 `gireulrim` 지정하여 생성
+- **교훈**: 한국어/특수문자 경로에서 create-next-app은 하위 폴더 필수
 
 ### [2026-04-13] next-pwa deprecated
-- **문제**: `next-pwa@5.6.0`이 workbox 6.x(deprecated)에 의존, Next.js 16과 충돌 가능
-- **해결**: `next-pwa` 플러그인 미사용. `app/manifest.ts` + `public/sw.js` 네이티브 방식으로 대체
-- **교훈**: Next.js 16에서 PWA는 별도 플러그인 없이 구현 가능. `next-pwa` 사용 금지
+- **문제**: `next-pwa@5.6.0`이 workbox 6.x(deprecated)에 의존
+- **해결**: `app/manifest.ts` + `public/sw.js` 네이티브 방식으로 대체
+- **교훈**: Next.js 16에서 next-pwa 사용 금지
