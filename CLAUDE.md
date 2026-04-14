@@ -200,6 +200,24 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
 
 <!-- 최신순으로 추가 -->
 
+### [2026-04-14] 서비스워커가 307 리다이렉트를 캐시 → ERR_FAILED 반복
+- **문제**: SW의 cache-first fetch가 proxy의 307 응답을 캐시에 저장 → 이후 요청 시 캐시된 307을 돌려줌 → 브라우저 ERR_FAILED 반복 (한두 번은 되다가 그다음부터 안 됨)
+- **해결**: `sw.js` fetch 핸들러에서 `navigate` 모드(HTML 페이지) 요청은 `respondWith` 자체를 호출하지 않아 브라우저가 직접 처리. `response.status === 200` 인 것만 캐시. `_next/static/` 파일과 이미지만 캐시 대상으로 제한
+- **재발 방지 교훈**: SW fetch 핸들러에서 **`event.request.mode === "navigate"` 이면 절대 respondWith 호출 금지**. 리다이렉트(3xx)는 캐시하지 말 것. `response.ok && response.status === 200` 조건으로만 캐시
+
+### [2026-04-14] Vercel 배포 후 브라우저 ERR_FAILED
+- **문제**: `curl`로는 HTTP 307 정상 응답인데 Chrome에서 ERR_FAILED. 원인 두 가지:
+  1. **Vercel SSO Protection** — 팀 계정의 Deployment Protection이 `all_except_custom_domains`로 설정되어 `-chunghee121s-projects.vercel.app` URL에 팀 로그인 필요
+  2. **브라우저 DNS/SSL 캐시** — 한번 ERR_FAILED가 캐시되면 서버가 정상이어도 브라우저가 차단
+- **해결**:
+  1. SSO Protection → Vercel API `PATCH /v9/projects/{id}` 로 `ssoProtection: null` 설정
+  2. 브라우저 문제 → `chrome://net-internals/#dns` 에서 DNS 캐시 초기화 + `chrome://net-internals/#sockets` 에서 소켓 플러시
+- **재발 방지 교훈**:
+  - 배포 직후 반드시 `curl -I URL` 로 서버 응답 먼저 확인 → 307/200 이면 서버는 정상, 브라우저 문제
+  - Vercel 팀 계정 프로젝트 생성 시 **즉시** SSO Protection 해제: `curl -X PATCH /v9/projects/{id} -d '{"ssoProtection":null}'`
+  - 공개 서비스 접속 주소는 항상 **`gireulrim.vercel.app`** (커스텀 도메인) 사용
+  - `-chunghee121s-projects.vercel.app` 프리뷰 URL은 팀원 전용이므로 외부 공유 금지
+
 ### [2026-04-13] create-next-app 한국어 경로 오류
 - **문제**: `C:\Street 길울림` 경로에서 `npx create-next-app@latest .` 실행 시 npm 명명 규칙 오류
 - **해결**: 하위 디렉터리 `gireulrim` 지정하여 생성
