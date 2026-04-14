@@ -34,14 +34,14 @@ export async function GET(request: Request) {
       } = await supabase.auth.getUser();
 
       if (user) {
-        // 온보딩 완료 여부 확인 (part 컬럼으로 판단)
+        // 온보딩 완료 여부 확인 (name 컬럼으로 판단)
         const { data: profile } = await supabase
           .from("users")
-          .select("part")
+          .select("name")
           .eq("id", user.id)
           .single();
 
-        if (!profile?.part) {
+        if (!profile?.name) {
           return NextResponse.redirect(`${origin}/onboarding`);
         }
       }

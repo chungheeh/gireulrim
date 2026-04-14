@@ -15,6 +15,11 @@ export interface Database {
           name: string;
           role: UserRole;
           part: string | null;
+          age: number | null;
+          location: string | null;
+          contact: string | null;
+          available_days: string[] | null;
+          instruments: string[] | null;
           preferred_genre: string[] | null;
           vocal_range: string | null;
           signature_song: string | null;
@@ -28,6 +33,11 @@ export interface Database {
           name: string;
           role?: UserRole;
           part?: string | null;
+          age?: number | null;
+          location?: string | null;
+          contact?: string | null;
+          available_days?: string[] | null;
+          instruments?: string[] | null;
           preferred_genre?: string[] | null;
           vocal_range?: string | null;
           signature_song?: string | null;
