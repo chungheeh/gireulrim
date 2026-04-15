@@ -1,6 +1,7 @@
 import PageHeader from "@/components/PageHeader";
 import Avatar from "@/components/Avatar";
 import Badge from "@/components/Badge";
+import LogoutButton from "@/components/LogoutButton";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { Database } from "@/lib/supabase/types";
@@ -13,7 +14,6 @@ import {
   GraduationCap,
   Settings,
   MessageSquare,
-  LogOut,
   ShieldCheck,
 } from "lucide-react";
 
@@ -123,9 +123,9 @@ export default async function MyPage() {
               <Coins size={16} className="text-yellow-900" />
               <span className="text-xs font-bold text-yellow-900 uppercase tracking-wide">크레딧 잔액</span>
             </div>
-            <button className="rounded-full bg-yellow-600/30 px-2.5 py-1 text-[11px] font-semibold text-yellow-900 hover:bg-yellow-600/40 transition-colors">
+            <Link href="/mypage/credits" className="rounded-full bg-yellow-600/30 px-2.5 py-1 text-[11px] font-semibold text-yellow-900 hover:bg-yellow-600/40 transition-colors">
               내역 보기
-            </button>
+            </Link>
           </div>
           <p className="text-4xl font-black text-yellow-900 mt-1">
             {(profile?.current_credits ?? 0).toLocaleString()}
@@ -146,23 +146,24 @@ export default async function MyPage() {
                 <p className="text-xs text-gray-400">계좌이체 후 입금 캡처 업로드</p>
               </div>
             </div>
-            <button className="rounded-full bg-green-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-green-700 transition-colors">
+            <Link href="/mypage/payment" className="rounded-full bg-green-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-green-700 transition-colors">
               업로드
-            </button>
+            </Link>
           </div>
         </div>
 
         {/* 메뉴 리스트 */}
         <nav className="rounded-2xl bg-white border border-gray-200 divide-y divide-gray-100 shadow-sm">
           {[
-            { Icon: Calendar,       label: "참석 현황",    desc: "모임 참석 이력 보기",     variant: "green"  },
-            { Icon: Music2,         label: "내 곡 목록",   desc: "내가 등록한 곡 관리",     variant: "purple" },
-            { Icon: GraduationCap,  label: "레슨 요청 내역", desc: "포인트 레슨 요청/수락", variant: "purple" },
-            { Icon: Settings,       label: "프로필 수정",  desc: "파트, 장르, 18번 곡 등",  variant: "gray"   },
-            { Icon: MessageSquare,  label: "건의사항",     desc: "운영진에게 의견 전달",    variant: "gray"   },
-          ].map(({ Icon, label, desc, variant }) => (
-            <button
+            { Icon: Calendar,       label: "참석 현황",    desc: "모임 참석 이력 보기",     variant: "green",  href: "/mypage/attendance" },
+            { Icon: Music2,         label: "내 곡 목록",   desc: "내가 등록한 곡 관리",     variant: "purple", href: "/songs" },
+            { Icon: GraduationCap,  label: "레슨 요청 내역", desc: "포인트 레슨 요청/수락", variant: "purple", href: "/mypage/lessons" },
+            { Icon: Settings,       label: "프로필 수정",  desc: "파트, 장르, 18번 곡 등",  variant: "gray",   href: "/mypage/edit" },
+            { Icon: MessageSquare,  label: "건의사항",     desc: "운영진에게 의견 전달",    variant: "gray",   href: "/mypage/feedback" },
+          ].map(({ Icon, label, desc, variant, href }) => (
+            <Link
               key={label}
+              href={href}
               className="flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-gray-50 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
             >
               <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
@@ -179,7 +180,7 @@ export default async function MyPage() {
                 <p className="text-xs text-gray-400">{desc}</p>
               </div>
               <ChevronRight size={16} className="text-gray-300 shrink-0" />
-            </button>
+            </Link>
           ))}
         </nav>
 
@@ -195,10 +196,7 @@ export default async function MyPage() {
         )}
 
         {/* 로그아웃 */}
-        <button className="flex w-full items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white py-3.5 text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors">
-          <LogOut size={15} />
-          로그아웃
-        </button>
+        <LogoutButton />
 
         <p className="text-center text-xs text-gray-300 pb-2">길울림 v0.1.0</p>
       </div>

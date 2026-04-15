@@ -86,27 +86,27 @@ export default function AddSongSheet({ open, onClose, onAdded }: AddSongSheetPro
         onClick={onClose}
       />
 
-      {/* 바텀시트 */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl max-h-[90vh] overflow-y-auto">
-        {/* 드래그 핸들 */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="h-1 w-10 rounded-full bg-gray-300" />
+      {/* 바텀시트 — flex 컬럼으로 구조화해 버튼을 항상 하단 고정 */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 flex flex-col bg-white rounded-t-3xl max-h-[90vh]">
+        {/* 드래그 핸들 + 헤더 (고정) */}
+        <div className="shrink-0">
+          <div className="flex justify-center pt-3 pb-1">
+            <div className="h-1 w-10 rounded-full bg-gray-300" />
+          </div>
+          <div className="flex items-center justify-between px-5 py-3">
+            <h2 className="text-base font-bold text-gray-900">곡 추가</h2>
+            <button
+              onClick={onClose}
+              className="flex items-center justify-center h-8 w-8 rounded-full hover:bg-gray-100 transition-colors"
+              aria-label="닫기"
+            >
+              <X size={20} className="text-gray-600" />
+            </button>
+          </div>
         </div>
 
-        {/* 헤더 */}
-        <div className="flex items-center justify-between px-5 py-3">
-          <h2 className="text-base font-bold text-gray-900">곡 추가</h2>
-          <button
-            onClick={onClose}
-            className="flex items-center justify-center h-8 w-8 rounded-full hover:bg-gray-100 transition-colors"
-            aria-label="닫기"
-          >
-            <X size={20} className="text-gray-600" />
-          </button>
-        </div>
-
-        {/* 입력 폼 */}
-        <div className="px-5 pb-8 space-y-4">
+        {/* 입력 폼 (스크롤 가능) */}
+        <div className="flex-1 overflow-y-auto px-5 py-2 space-y-4">
           {error && (
             <p className="text-xs text-red-500 bg-red-50 rounded-xl px-3 py-2">{error}</p>
           )}
@@ -195,12 +195,14 @@ export default function AddSongSheet({ open, onClose, onAdded }: AddSongSheetPro
               className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-800 outline-none focus:border-green-500 focus:bg-white transition-colors placeholder:text-gray-400 resize-none"
             />
           </div>
+        </div>
 
-          {/* 저장 버튼 */}
+        {/* 저장 버튼 (항상 하단 고정) */}
+        <div className="shrink-0 border-t border-gray-100 px-5 pt-3 pb-[max(20px,env(safe-area-inset-bottom))]">
           <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full rounded-xl bg-green-600 py-3 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full rounded-xl bg-green-600 py-3.5 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {saving ? "저장 중..." : "저장하기"}
           </button>
