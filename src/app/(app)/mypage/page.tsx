@@ -4,6 +4,7 @@ import Badge from "@/components/Badge";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { Database } from "@/lib/supabase/types";
+import Link from "next/link";
 import {
   Coins,
   Calendar,
@@ -13,6 +14,7 @@ import {
   Settings,
   MessageSquare,
   LogOut,
+  ShieldCheck,
 } from "lucide-react";
 
 const PART_ICON: Record<string, string> = {
@@ -180,6 +182,17 @@ export default async function MyPage() {
             </button>
           ))}
         </nav>
+
+        {/* 관리자 페이지 (admin 역할만 표시) */}
+        {profile?.role === "admin" && (
+          <Link
+            href="/admin"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-green-200 bg-green-50 py-3.5 text-sm font-semibold text-green-700 hover:bg-green-100 transition-colors"
+          >
+            <ShieldCheck size={15} />
+            관리자 페이지
+          </Link>
+        )}
 
         {/* 로그아웃 */}
         <button className="flex w-full items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white py-3.5 text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors">

@@ -81,11 +81,20 @@ export interface Database {
           id: string;
           title: string;
           date: string;
+          time: string | null;
+          location: string | null;
           participation_fee: number;
           is_large_event: boolean;
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["schedules"]["Row"], "id" | "created_at">;
+        Insert: {
+          title: string;
+          date: string;
+          time?: string | null;
+          location?: string | null;
+          participation_fee?: number;
+          is_large_event?: boolean;
+        };
         Update: Partial<Database["public"]["Tables"]["schedules"]["Insert"]>;
         Relationships: [];
       };
