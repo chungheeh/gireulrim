@@ -56,11 +56,23 @@ export interface Database {
           youtube_url: string | null;
           mr_file_url: string | null;
           lyrics: string | null;
+          song_key: string | null;
+          tag: string | null;
           user_id: string;
           is_busking_selected: boolean;
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["songs"]["Row"], "id" | "created_at">;
+        Insert: {
+          title: string;
+          artist: string;
+          user_id: string;
+          youtube_url?: string | null;
+          mr_file_url?: string | null;
+          lyrics?: string | null;
+          song_key?: string | null;
+          tag?: string | null;
+          is_busking_selected?: boolean;
+        };
         Update: Partial<Database["public"]["Tables"]["songs"]["Insert"]>;
         Relationships: [];
       };
@@ -83,6 +95,7 @@ export interface Database {
           schedule_id: string;
           user_id: string;
           status: AttendanceStatus;
+          practice_note: string | null;
           created_at: string;
         };
         Insert: Omit<Database["public"]["Tables"]["attendances"]["Row"], "id" | "created_at">;

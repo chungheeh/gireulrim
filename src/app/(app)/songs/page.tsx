@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import PageHeader from "@/components/PageHeader";
 import Avatar from "@/components/Avatar";
 import Badge from "@/components/Badge";
+import LyricsModal from "@/components/LyricsModal";
+import AddSongSheet from "@/components/AddSongSheet";
+import { createClient } from "@/lib/supabase/client";
 import { Plus, Search, Play, FileText, Music2, Star } from "lucide-react";
 
 // 파트별 아이콘
@@ -14,69 +17,19 @@ const PART_ICON: Record<string, string> = {
   키보드: "🎹",
 };
 
-// 목업 데이터
-const MOCK_SONGS = [
-  {
-    id: "1",
-    title: "나의 사람아",
-    artist: "이선희",
-    tag: "단체곡" as const,
-    song_key: "A",
-    youtube_url: "https://youtu.be/xxxxxx",
-    youtube_thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg",
-    has_mr: true,
-    has_lyrics: true,
-    is_busking_selected: true,
-    author: "한충희",
-    author_part: "기타",
-    created_at: "2일 전",
-  },
-  {
-    id: "2",
-    title: "사랑했지만",
-    artist: "김광석",
-    tag: "듀엣 모집" as const,
-    song_key: "G",
-    youtube_url: "https://youtu.be/xxxxxx",
-    youtube_thumbnail: null,
-    has_mr: true,
-    has_lyrics: false,
-    is_busking_selected: false,
-    author: "솔아",
-    author_part: "보컬",
-    created_at: "4일 전",
-  },
-  {
-    id: "3",
-    title: "야생화",
-    artist: "박효신",
-    tag: "솔로" as const,
-    song_key: "Bb",
-    youtube_url: null,
-    youtube_thumbnail: null,
-    has_mr: false,
-    has_lyrics: true,
-    is_busking_selected: false,
-    author: "버드나무",
-    author_part: "보컬",
-    created_at: "1주 전",
-  },
-  {
-    id: "4",
-    title: "오래된 노래",
-    artist: "잔나비",
-    tag: "단체곡" as const,
-    song_key: "E",
-    youtube_url: "https://youtu.be/xxxxxx",
-    youtube_thumbnail: null,
-    has_mr: true,
-    has_lyrics: true,
-    is_busking_selected: false,
-    author: "민준",
-    author_part: "키보드",
-    created_at: "1주 전",
-  },
-];
+interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  youtube_url: string | null;
+  lyrics: string | null;
+  song_key: string | null;
+  tag: string;
+  user_id: string;
+  is_busking_selected: boolean;
+  created_at: string;
+  users: { name: string; part: string | null } | null;
+}
 
 type Filter = "전체" | "솔로" | "듀엣 모집" | "단체곡" | "버스킹 확정";
 
@@ -86,13 +39,31 @@ const TAG_BADGE: Record<string, "green" | "purple" | "yellow" | "gray"> = {
   단체곡: "yellow",
 };
 
+function formatDate(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}분 전`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}시간 전`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}일 전`;
+  const weeks = Math.floor(days / 7);
+  if (weeks < 5) return `${weeks}주 전`;
+  return new Date(dateStr).toLocaleDateString("ko-KR", { month: "short", day: "numeric" });
+}
+
 // YouTube 썸네일 컴포넌트
 function YoutubeThumbnail({ url, title }: { url: string | null; title: string }) {
-  if (url) {
+  const videoId = url ? extractYoutubeId(url) : null;
+  const thumbUrl = videoId
+    ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`
+    : null;
+
+  if (thumbUrl) {
     return (
       <div className="relative h-[68px] w-[120px] shrink-0 overflow-hidden rounded-xl bg-gray-200">
         <img
-          src={url}
+          src={thumbUrl}
           alt={title}
           className="h-full w-full object-cover"
           onError={(e) => {
@@ -114,13 +85,45 @@ function YoutubeThumbnail({ url, title }: { url: string | null; title: string })
   );
 }
 
+function extractYoutubeId(url: string): string | null {
+  const match = url.match(
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([A-Za-z0-9_-]{11})/
+  );
+  return match ? match[1] : null;
+}
+
 export default function SongsPage() {
   const [filter, setFilter] = useState<Filter>("전체");
   const [search, setSearch] = useState("");
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [lyricsTarget, setLyricsTarget] = useState<Song | null>(null);
 
   const filters: Filter[] = ["전체", "솔로", "듀엣 모집", "단체곡", "버스킹 확정"];
 
-  const filtered = MOCK_SONGS.filter((s) => {
+  const fetchSongs = useCallback(async () => {
+    setLoading(true);
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("songs")
+        .select("*, users(name, part)")
+        .order("created_at", { ascending: false });
+
+      if (!error && data) {
+        setSongs(data as Song[]);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSongs();
+  }, [fetchSongs]);
+
+  const filtered = songs.filter((s) => {
     const matchTag =
       filter === "전체"
         ? true
@@ -128,9 +131,7 @@ export default function SongsPage() {
         ? s.is_busking_selected
         : s.tag === filter;
     const matchSearch =
-      search === "" ||
-      s.title.includes(search) ||
-      s.artist.includes(search);
+      search === "" || s.title.includes(search) || s.artist.includes(search);
     return matchTag && matchSearch;
   });
 
@@ -140,7 +141,10 @@ export default function SongsPage() {
         title="선곡 / 연습"
         subtitle="MR · 가사 · 유튜브 링크"
         action={
-          <button className="flex items-center gap-1 rounded-full bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700 transition-colors">
+          <button
+            onClick={() => setShowAdd(true)}
+            className="flex items-center gap-1 rounded-full bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700 transition-colors"
+          >
             <Plus size={14} />
             곡 추가
           </button>
@@ -177,8 +181,13 @@ export default function SongsPage() {
           ))}
         </div>
 
-        {/* 곡 목록 */}
-        {filtered.length === 0 ? (
+        {/* 로딩 */}
+        {loading ? (
+          <div className="flex justify-center pt-16">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-green-600 border-t-transparent" />
+          </div>
+        ) : filtered.length === 0 ? (
+          /* 빈 상태 */
           <div className="flex flex-col items-center justify-center pt-16 text-center">
             <div className="mb-4 rounded-full bg-gray-100 p-5">
               <Music2 size={36} className="text-gray-300" />
@@ -187,6 +196,7 @@ export default function SongsPage() {
             <p className="mt-1 text-sm text-gray-400">곡을 추가하거나 필터를 변경해 보세요 🎵</p>
           </div>
         ) : (
+          /* 곡 목록 */
           <div className="space-y-2.5">
             {filtered.map((song) => (
               <div
@@ -197,14 +207,16 @@ export default function SongsPage() {
                 {song.is_busking_selected && (
                   <div className="flex items-center gap-1.5 bg-yellow-500 px-3 py-1.5">
                     <Star size={11} className="text-yellow-900 fill-yellow-900" />
-                    <span className="text-[11px] font-bold text-yellow-900">버스킹 확정 셋리스트</span>
+                    <span className="text-[11px] font-bold text-yellow-900">
+                      버스킹 확정 셋리스트
+                    </span>
                   </div>
                 )}
 
                 <div className="p-3.5">
                   <div className="flex gap-3">
                     {/* 썸네일 */}
-                    <YoutubeThumbnail url={song.youtube_thumbnail} title={song.title} />
+                    <YoutubeThumbnail url={song.youtube_url} title={song.title} />
 
                     {/* 곡 정보 */}
                     <div className="flex-1 min-w-0">
@@ -225,24 +237,24 @@ export default function SongsPage() {
 
                   {/* 액션 버튼 */}
                   <div className="flex items-center gap-2 mt-3">
-                    <button
-                      disabled={!song.has_mr}
+                    <a
+                      href={song.youtube_url ?? undefined}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-disabled={!song.youtube_url}
+                      onClick={(e) => { if (!song.youtube_url) e.preventDefault(); }}
                       className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold transition-colors ${
-                        song.has_mr
+                        song.youtube_url
                           ? "bg-green-50 text-green-700 hover:bg-green-100"
-                          : "bg-gray-50 text-gray-300 cursor-not-allowed"
+                          : "bg-gray-50 text-gray-300 cursor-not-allowed pointer-events-none"
                       }`}
                     >
                       <Play size={13} />
                       MR 재생
-                    </button>
+                    </a>
                     <button
-                      disabled={!song.has_lyrics}
-                      className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold transition-colors ${
-                        song.has_lyrics
-                          ? "bg-purple-50 text-purple-700 hover:bg-purple-100"
-                          : "bg-gray-50 text-gray-300 cursor-not-allowed"
-                      }`}
+                      onClick={() => setLyricsTarget(song)}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold transition-colors bg-purple-50 text-purple-700 hover:bg-purple-100"
                     >
                       <FileText size={13} />
                       가사 보기
@@ -251,10 +263,18 @@ export default function SongsPage() {
 
                   {/* 작성자 */}
                   <div className="flex items-center gap-1.5 mt-2.5 pt-2.5 border-t border-gray-100">
-                    <Avatar name={song.author} size="sm" />
-                    <span className="text-xs font-medium text-gray-600">{song.author}</span>
-                    <span className="text-xs text-gray-400">{PART_ICON[song.author_part]}</span>
-                    <span className="ml-auto text-[10px] text-gray-400">{song.created_at}</span>
+                    <Avatar name={song.users?.name ?? "?"} size="sm" />
+                    <span className="text-xs font-medium text-gray-600">
+                      {song.users?.name ?? "알 수 없음"}
+                    </span>
+                    {song.users?.part && (
+                      <span className="text-xs text-gray-400">
+                        {PART_ICON[song.users.part] ?? ""}
+                      </span>
+                    )}
+                    <span className="ml-auto text-[10px] text-gray-400">
+                      {formatDate(song.created_at)}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -262,6 +282,25 @@ export default function SongsPage() {
           </div>
         )}
       </div>
+
+      {/* 가사 모달 */}
+      {lyricsTarget && (
+        <LyricsModal
+          open={true}
+          onClose={() => setLyricsTarget(null)}
+          title={lyricsTarget.title}
+          artist={lyricsTarget.artist}
+          lyrics={lyricsTarget.lyrics}
+          youtubeUrl={lyricsTarget.youtube_url}
+        />
+      )}
+
+      {/* 곡 추가 바텀시트 */}
+      <AddSongSheet
+        open={showAdd}
+        onClose={() => setShowAdd(false)}
+        onAdded={fetchSongs}
+      />
     </>
   );
 }

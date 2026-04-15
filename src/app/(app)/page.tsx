@@ -1,17 +1,11 @@
 import PageHeader from "@/components/PageHeader";
 import Avatar from "@/components/Avatar";
 import Badge from "@/components/Badge";
+import AttendanceButtons from "@/components/AttendanceButtons";
+import { createClient } from "@/lib/supabase/server";
 import { Bell, CalendarDays, MapPin, Users, ChevronRight, Mic2 } from "lucide-react";
 
-// 목업 데이터 (Supabase 연동 전 UI 확인용)
-const upcomingSchedule = {
-  title: "4월 정기 합주",
-  date: "4월 19일 (토) 오후 7시",
-  location: "홍대 연습실",
-  attendees: 8,
-  fee: 9000,
-};
-
+// 목업 데이터 (최근 소식)
 const recentPosts = [
   {
     id: 1,
@@ -45,7 +39,60 @@ const recentPosts = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient();
+
+  // 현재 로그인 유저
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // 오늘 이후 가장 가까운 일정 1개 조회
+  const today = new Date().toISOString().split("T")[0];
+  const { data: schedules } = await supabase
+    .from("schedules")
+    .select("*")
+    .gte("date", today)
+    .order("date")
+    .limit(1);
+
+  const schedule = schedules?.[0] ?? null;
+
+  // 현재 유저의 참석 상태 조회
+  let attendanceStatus = "undecided";
+  if (schedule && user) {
+    const { data: attendance } = await supabase
+      .from("attendances")
+      .select("status")
+      .eq("schedule_id", schedule.id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (attendance) {
+      attendanceStatus = attendance.status;
+    }
+  }
+
+  // 참석 인원 수 조회
+  let attendeeCount = 0;
+  if (schedule) {
+    const { count } = await supabase
+      .from("attendances")
+      .select("*", { count: "exact", head: true })
+      .eq("schedule_id", schedule.id)
+      .eq("status", "attending");
+    attendeeCount = count ?? 0;
+  }
+
+  // 날짜 포맷 (YYYY-MM-DD → 한국어)
+  function formatDate(dateStr: string): string {
+    const date = new Date(dateStr + "T00:00:00");
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+    const weekday = weekdays[date.getDay()];
+    return `${month}월 ${day}일 (${weekday})`;
+  }
+
   return (
     <>
       <PageHeader
@@ -98,35 +145,43 @@ export default function HomePage() {
               </button>
             </div>
 
-            <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
-              <div className="bg-green-600 px-4 py-2.5 flex items-center justify-between">
-                <span className="text-xs font-semibold text-white">{upcomingSchedule.title}</span>
-                <Badge variant="yellow">참가비 {upcomingSchedule.fee.toLocaleString()}원</Badge>
-              </div>
-              <div className="px-4 py-3 space-y-1.5">
-                <div className="flex items-center gap-2 text-xs text-gray-600">
-                  <CalendarDays size={13} className="text-gray-400 shrink-0" />
-                  {upcomingSchedule.date}
+            {schedule ? (
+              <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+                <div className="bg-green-600 px-4 py-2.5 flex items-center justify-between">
+                  <span className="text-xs font-semibold text-white">{schedule.title}</span>
+                  <Badge variant="yellow">
+                    참가비 {(schedule.participation_fee as number).toLocaleString()}원
+                  </Badge>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-gray-600">
-                  <MapPin size={13} className="text-gray-400 shrink-0" />
-                  {upcomingSchedule.location}
+                <div className="px-4 py-3 space-y-1.5">
+                  <div className="flex items-center gap-2 text-xs text-gray-600">
+                    <CalendarDays size={13} className="text-gray-400 shrink-0" />
+                    {formatDate(schedule.date as string)}
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <Users size={13} className="text-gray-400 shrink-0" />
+                    참석 예정 {attendeeCount}명
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <Users size={13} className="text-gray-400 shrink-0" />
-                  참석 예정 {upcomingSchedule.attendees}명
-                </div>
+                {user ? (
+                  <AttendanceButtons
+                    scheduleId={schedule.id as string}
+                    userId={user.id}
+                    initialStatus={attendanceStatus}
+                  />
+                ) : (
+                  <div className="flex border-t border-gray-100">
+                    <p className="flex-1 py-3 text-center text-xs text-gray-400">
+                      로그인 후 참석 여부를 알려주세요
+                    </p>
+                  </div>
+                )}
               </div>
-              <div className="flex border-t border-gray-100">
-                <button className="flex-1 py-3 text-sm font-semibold text-green-600 hover:bg-green-50 transition-colors">
-                  참석
-                </button>
-                <div className="w-px bg-gray-100" />
-                <button className="flex-1 py-3 text-sm font-semibold text-gray-400 hover:bg-gray-50 transition-colors">
-                  불참
-                </button>
+            ) : (
+              <div className="rounded-2xl border border-gray-200 bg-white px-4 py-6 text-center shadow-sm">
+                <p className="text-sm text-gray-400">다가오는 일정이 없어요</p>
               </div>
-            </div>
+            )}
           </section>
 
           {/* 최근 소식 */}
