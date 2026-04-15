@@ -59,14 +59,20 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // 관리자 페이지 접근 제한 (admin 역할만)
-  if (pathname.startsWith("/admin")) {
+  // 프로필 미완성 → 온보딩으로 (이름이 없으면 신규 가입자)
+  if (!pathname.startsWith("/onboarding")) {
     const { data: profile } = await supabase
       .from("users")
-      .select("role")
+      .select("name, role")
       .eq("id", user.id)
       .single();
-    if (profile?.role !== "admin") {
+
+    if (!profile?.name) {
+      return NextResponse.redirect(new URL("/onboarding", request.url));
+    }
+
+    // 관리자 페이지 접근 제한 (admin 역할만)
+    if (pathname.startsWith("/admin") && profile?.role !== "admin") {
       return NextResponse.redirect(new URL("/", request.url));
     }
   }
