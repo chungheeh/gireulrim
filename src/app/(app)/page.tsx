@@ -3,7 +3,8 @@ import Avatar from "@/components/Avatar";
 import Badge from "@/components/Badge";
 import AttendanceButtons from "@/components/AttendanceButtons";
 import { createClient } from "@/lib/supabase/server";
-import { Bell, CalendarDays, Users, ChevronRight, Mic2, UserPlus } from "lucide-react";
+import { Bell, CalendarDays, Users, Mic2, UserPlus } from "lucide-react";
+import AttendeePopup from "@/components/AttendeePopup";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -32,15 +33,17 @@ export default async function HomePage() {
     if (attendance) attendanceStatus = attendance.status;
   }
 
-  // 참석 인원
+  // 참석 인원 + 참석자 목록
   let attendeeCount = 0;
+  let attendees: { user_id: string; users: { name: string; instruments: string[] | null; profile_image_url: string | null } | null }[] = [];
   if (schedule) {
-    const { count } = await supabase
+    const { data: attendeeData, count } = await supabase
       .from("attendances")
-      .select("*", { count: "exact", head: true })
+      .select("user_id, users(name, instruments, profile_image_url)", { count: "exact" })
       .eq("schedule_id", schedule.id)
       .eq("status", "attending");
     attendeeCount = count ?? 0;
+    attendees = (attendeeData ?? []) as typeof attendees;
   }
 
   // 전체 멤버 수
@@ -143,7 +146,7 @@ export default async function HomePage() {
                   )}
                   <div className="flex items-center gap-2 text-xs text-gray-500">
                     <Users size={13} className="text-gray-400 shrink-0" />
-                    참석 예정 {attendeeCount}명
+                    참석 예정 <AttendeePopup attendees={attendees} count={attendeeCount} />
                   </div>
                 </div>
                 {user ? (
