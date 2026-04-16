@@ -1,10 +1,36 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { Mic2 } from "lucide-react";
+import { Mic2, AlertTriangle, ExternalLink } from "lucide-react";
+import { useEffect, useState } from "react";
+
+function isInAppBrowser(): boolean {
+  if (typeof window === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  return (
+    /KAKAOTALK/i.test(ua) ||
+    /Instagram/i.test(ua) ||
+    /NAVER/i.test(ua) ||
+    /FB_IAB|FBAN|FBAV/i.test(ua) ||
+    /Line\//i.test(ua) ||
+    /Twitter/i.test(ua) ||
+    // Android WebView
+    (/Android/i.test(ua) && /wv\b/.test(ua)) ||
+    (/Android/i.test(ua) && !/Chrome\//i.test(ua) && /Version\//i.test(ua))
+  );
+}
+
+function getOpenInBrowserUrl(): string {
+  return typeof window !== "undefined" ? window.location.href : "";
+}
 
 export default function LoginPage() {
   const supabase = createClient();
+  const [inAppBrowser, setInAppBrowser] = useState(false);
+
+  useEffect(() => {
+    setInAppBrowser(isInAppBrowser());
+  }, []);
 
   async function handleGoogleLogin() {
     await supabase.auth.signInWithOAuth({
@@ -17,6 +43,32 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-white px-6">
+      {/* 인앱 브라우저 경고 */}
+      {inAppBrowser && (
+        <div className="mb-6 w-full max-w-sm rounded-2xl border border-orange-200 bg-orange-50 p-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle size={18} className="text-orange-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-orange-700">앱 내 브라우저에서는 로그인이 안돼요</p>
+              <p className="text-xs text-orange-600 mt-1 leading-relaxed">
+                카카오톡·인스타그램 등 앱 안에서 열면 구글 로그인이 차단됩니다.<br />
+                아래 버튼을 눌러 <strong>Chrome 또는 Safari</strong>로 열어주세요.
+              </p>
+              <a
+                href={`intent://${getOpenInBrowserUrl().replace(/^https?:\/\//, "")}#Intent;scheme=https;package=com.android.chrome;end`}
+                className="mt-3 flex items-center justify-center gap-1.5 rounded-xl bg-orange-500 px-4 py-2.5 text-xs font-bold text-white hover:bg-orange-600 transition-colors"
+              >
+                <ExternalLink size={13} />
+                Chrome으로 열기
+              </a>
+              <p className="text-[10px] text-orange-500 mt-2 text-center">
+                iPhone은 우측 하단 Safari 아이콘을 눌러주세요
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 로고 영역 */}
       <div className="mb-10 text-center">
         <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-green-600 shadow-lg">
@@ -33,7 +85,8 @@ export default function LoginPage() {
       <div className="w-full max-w-sm space-y-3">
         <button
           onClick={handleGoogleLogin}
-          className="flex w-full items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-4 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 active:scale-95 transition-all"
+          disabled={inAppBrowser}
+          className="flex w-full items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-4 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <svg width="20" height="20" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
