@@ -194,7 +194,7 @@ export default function OnboardingPage() {
                 onChange={(e) => setForm((f) => ({ ...f, real_name: e.target.value }))}
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500 transition-all"
               />
-              <p className="text-xs text-gray-400">운영진 확인용 · 다른 멤버에게 공개되지 않아요</p>
+              <p className="text-xs text-gray-400">다른 멤버에게 공개되지 않아요</p>
             </div>
 
             {/* 닉네임 */}
@@ -246,7 +246,7 @@ export default function OnboardingPage() {
                 onChange={(e) => setForm((f) => ({ ...f, contact: e.target.value }))}
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500 transition-all"
               />
-              <p className="text-xs text-gray-400">운영진 확인용 · 다른 멤버에게 공개되지 않아요</p>
+              <p className="text-xs text-gray-400">다른 멤버에게 공개되지 않아요</p>
             </div>
           </div>
         )}
