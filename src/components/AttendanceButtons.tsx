@@ -118,8 +118,11 @@ export default function AttendanceButtons({
 
       {/* 연습할 곡 팝업 */}
       {showNotePopup && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40">
-          <div className="w-full max-w-md rounded-t-2xl bg-white p-5 shadow-xl">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+          onClick={() => setShowNotePopup(false)}
+        >
+          <div className="w-full max-w-sm rounded-3xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h3 className="mb-1 text-sm font-bold text-gray-900">연습할 곡</h3>
             <p className="mb-3 text-xs text-gray-500">
               이번 모임에서 연습하고 싶은 곡을 적어주세요 (선택)

@@ -82,7 +82,14 @@ export default function ChatPage() {
             .eq("id", payload.new.id)
             .single();
           if (data) {
-            setMessages((prev) => [...prev, data as Message]);
+            setMessages((prev) => {
+              // 옵티미스틱 temp 메시지 제거 후 실제 메시지로 대체
+              const withoutTemp = prev.filter(
+                (m) => !(m.id.startsWith("temp-") && m.user_id === (data as Message).user_id && m.content === (data as Message).content)
+              );
+              if (withoutTemp.some((m) => m.id === (data as Message).id)) return withoutTemp;
+              return [...withoutTemp, data as Message];
+            });
             setTimeout(() => scrollToBottom(true), 50);
           }
         }
@@ -97,6 +104,15 @@ export default function ChatPage() {
     setSending(true);
     const content = input.trim();
     setInput("");
+
+    // 옵티미스틱 업데이트 — 전송 즉시 화면에 표시
+    const tempId = `temp-${Date.now()}`;
+    setMessages((prev) => [
+      ...prev,
+      { id: tempId, user_id: currentUserId, content, created_at: new Date().toISOString(), users: null },
+    ]);
+    setTimeout(() => scrollToBottom(true), 50);
+
     await supabase.from("messages").insert({ user_id: currentUserId, content });
     setSending(false);
     inputRef.current?.focus();

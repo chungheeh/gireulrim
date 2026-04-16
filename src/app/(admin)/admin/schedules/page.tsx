@@ -125,11 +125,11 @@ export default function AdminSchedulesPage() {
         </div>
       )}
 
-      {/* 추가 바텀시트 */}
+      {/* 추가 모달 */}
       {showAdd && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setShowAdd(false)}>
-          <div className="w-full max-w-lg rounded-t-3xl bg-white pb-8 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-center pt-3 pb-2"><div className="h-1 w-10 rounded-full bg-gray-200" /></div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => setShowAdd(false)}>
+          <div className="w-full max-w-lg rounded-3xl bg-white max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-center pt-4 pb-2"><div className="h-1 w-10 rounded-full bg-gray-200" /></div>
             <div className="flex items-center justify-between px-5 pb-3">
               <span className="font-bold text-gray-900">정모 추가</span>
               <button onClick={() => setShowAdd(false)} className="rounded-full p-1.5 hover:bg-gray-100"><X size={18} className="text-gray-500" /></button>
