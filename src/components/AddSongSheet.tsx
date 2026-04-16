@@ -82,12 +82,11 @@ export default function AddSongSheet({ open, onClose, onAdded }: AddSongSheetPro
     <>
       {/* 딤 배경 */}
       <div
-        className="fixed inset-0 z-40 bg-black/40"
+        className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4"
         onClick={onClose}
-      />
-
-      {/* 바텀시트 — flex 컬럼으로 구조화해 버튼을 항상 하단 고정 */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 flex flex-col bg-white rounded-t-3xl max-h-[90vh]">
+      >
+      {/* 모달 — flex 컬럼으로 구조화해 버튼을 항상 하단 고정 */}
+      <div className="relative w-full max-w-sm z-50 flex flex-col bg-white rounded-3xl max-h-[85vh]" onClick={(e) => e.stopPropagation()}>
         {/* 드래그 핸들 + 헤더 (고정) */}
         <div className="shrink-0">
           <div className="flex justify-center pt-3 pb-1">
@@ -198,7 +197,7 @@ export default function AddSongSheet({ open, onClose, onAdded }: AddSongSheetPro
         </div>
 
         {/* 저장 버튼 (항상 하단 고정) */}
-        <div className="shrink-0 border-t border-gray-100 px-5 pt-3 pb-[max(20px,env(safe-area-inset-bottom))]">
+        <div className="shrink-0 border-t border-gray-100 px-5 pt-3 pb-5">
           <button
             onClick={handleSave}
             disabled={saving}
@@ -207,6 +206,7 @@ export default function AddSongSheet({ open, onClose, onAdded }: AddSongSheetPro
             {saving ? "저장 중..." : "저장하기"}
           </button>
         </div>
+      </div>
       </div>
     </>
   );

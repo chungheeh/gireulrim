@@ -138,6 +138,21 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["refund_requests"]["Insert"]>;
         Relationships: [];
       };
+      messages: {
+        Row: {
+          id: string;
+          user_id: string;
+          content: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          content: string;
+          id?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["messages"]["Insert"]>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

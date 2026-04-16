@@ -55,9 +55,9 @@ function MemberDetail({ member, isMe, onClose }: MemberDetailProps) {
   const label = getMainLabel(member.instruments);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
       <div
-        className="w-full max-w-lg rounded-t-3xl bg-white max-h-[90vh] flex flex-col"
+        className="w-full max-w-sm rounded-3xl bg-white max-h-[85vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 드래그 핸들 */}

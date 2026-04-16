@@ -1,7 +1,8 @@
 import PageHeader from "@/components/PageHeader";
 import { createClient } from "@/lib/supabase/server";
 import MembersClient from "./MembersClient";
-import { Users } from "lucide-react";
+import Link from "next/link";
+import { MessageCircle } from "lucide-react";
 
 export default async function MembersPage() {
   const supabase = await createClient();
@@ -21,10 +22,13 @@ export default async function MembersPage() {
         title="멤버"
         subtitle={`길울림 ${memberList.length}명`}
         action={
-          <div className="flex items-center gap-1 text-xs text-gray-400">
-            <Users size={14} />
-            <span>{memberList.length}명</span>
-          </div>
+          <Link
+            href="/chat"
+            className="flex items-center gap-1.5 rounded-full bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700 transition-colors"
+          >
+            <MessageCircle size={14} />
+            단체채팅
+          </Link>
         }
       />
       <MembersClient members={memberList} currentUserId={user?.id} />
