@@ -4,7 +4,16 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Avatar from "@/components/Avatar";
-import { Send, ArrowLeft, Users } from "lucide-react";
+import { Send, ArrowLeft, Users, Bell, BellOff } from "lucide-react";
+
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
+
+function urlBase64ToUint8Array(base64: string): Uint8Array {
+  const padding = "=".repeat((4 - (base64.length % 4)) % 4);
+  const b64 = (base64 + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(b64);
+  return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+}
 
 interface Message {
   id: string;
@@ -41,6 +50,8 @@ export default function ChatPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [memberCount, setMemberCount] = useState(0);
+  const [currentUserName, setCurrentUserName] = useState("");
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission>("default");
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -51,7 +62,16 @@ export default function ChatPage() {
   useEffect(() => {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) setCurrentUserId(user.id);
+      if (user) {
+        setCurrentUserId(user.id);
+        const { data: profile } = await supabase.from("users").select("name").eq("id", user.id).single();
+        if (profile) setCurrentUserName(profile.name);
+      }
+
+      // 알림 권한 상태 확인
+      if ("Notification" in window) {
+        setNotifPermission(Notification.permission);
+      }
 
       const { count } = await supabase
         .from("users")
@@ -99,6 +119,29 @@ export default function ChatPage() {
     return () => { supabase.removeChannel(channel); };
   }, [supabase, scrollToBottom]);
 
+  async function requestNotificationPermission() {
+    if (!("Notification" in window) || !("serviceWorker" in navigator)) return;
+    const permission = await Notification.requestPermission();
+    setNotifPermission(permission);
+    if (permission === "granted" && currentUserId) {
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        const existing = await reg.pushManager.getSubscription();
+        const sub = existing ?? await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as unknown as BufferSource,
+        });
+        const keys = sub.toJSON().keys!;
+        await supabase.from("push_subscriptions").upsert(
+          { user_id: currentUserId, endpoint: sub.endpoint, p256dh: keys.p256dh, auth: keys.auth },
+          { onConflict: "user_id,endpoint" }
+        );
+      } catch (e) {
+        console.error("Push subscription failed:", e);
+      }
+    }
+  }
+
   async function handleSend() {
     if (!input.trim() || !currentUserId || sending) return;
     setSending(true);
@@ -114,6 +157,14 @@ export default function ChatPage() {
     setTimeout(() => scrollToBottom(true), 50);
 
     await supabase.from("messages").insert({ user_id: currentUserId, content });
+
+    // 다른 멤버에게 푸시 알림 발송 (fire-and-forget)
+    if (currentUserName) {
+      supabase.functions.invoke("send-group-push", {
+        body: { sender_id: currentUserId, sender_name: currentUserName, content },
+      }).catch(() => {});
+    }
+
     setSending(false);
     inputRef.current?.focus();
   }
@@ -137,6 +188,21 @@ export default function ChatPage() {
             <span className="text-[11px] text-gray-500">멤버 {memberCount}명</span>
           </div>
         </div>
+        {"Notification" in (typeof window !== "undefined" ? window : {}) && notifPermission !== "granted" && (
+          <button
+            onClick={requestNotificationPermission}
+            className="flex items-center gap-1 rounded-full bg-green-50 border border-green-200 px-2.5 py-1.5 text-[11px] font-semibold text-green-700 hover:bg-green-100 transition-colors shrink-0"
+          >
+            <Bell size={12} />
+            알림 허용
+          </button>
+        )}
+        {notifPermission === "granted" && (
+          <div className="flex items-center gap-1 rounded-full bg-gray-50 px-2.5 py-1.5 text-[11px] text-gray-400 shrink-0">
+            <BellOff size={12} />
+            알림 켜짐
+          </div>
+        )}
       </div>
 
       {/* 메시지 목록 */}

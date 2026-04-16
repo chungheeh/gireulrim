@@ -153,6 +153,12 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["messages"]["Insert"]>;
         Relationships: [];
       };
+      push_subscriptions: {
+        Row: { id: string; user_id: string; endpoint: string; p256dh: string; auth: string; created_at: string; };
+        Insert: { user_id: string; endpoint: string; p256dh: string; auth: string; id?: string; };
+        Update: Partial<Database["public"]["Tables"]["push_subscriptions"]["Insert"]>;
+        Relationships: [];
+      };
       direct_messages: {
         Row: {
           id: string;
