@@ -56,7 +56,8 @@ export default async function HomePage() {
     .limit(3);
 
   function formatDate(dateStr: string): string {
-    const date = new Date(dateStr + "T00:00:00");
+    const datePart = dateStr.split("T")[0]; // ISO 타임스탬프도 안전하게 처리
+    const date = new Date(datePart + "T00:00:00");
     const month = date.getMonth() + 1;
     const day = date.getDate();
     const weekdays = ["일", "월", "화", "수", "목", "금", "토"];

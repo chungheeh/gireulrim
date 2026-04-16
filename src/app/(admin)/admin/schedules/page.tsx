@@ -31,6 +31,16 @@ export default function AdminSchedulesPage() {
   const [error, setError] = useState("");
   const supabase = createClient();
 
+  function formatDate(dateStr: string): string {
+    const datePart = dateStr.split("T")[0];
+    const date = new Date(datePart + "T00:00:00");
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+    const weekday = weekdays[date.getDay()];
+    return `${month}월 ${day}일 (${weekday})`;
+  }
+
   const fetchSchedules = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase
@@ -97,7 +107,7 @@ export default function AdminSchedulesPage() {
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-1.5 text-xs text-gray-500">
                       <CalendarDays size={12} className="text-gray-400" />
-                      {s.date}{s.time && ` ${s.time}`}
+                      {formatDate(s.date)}{s.time && ` ${s.time}`}
                     </div>
                     {s.location && <div className="flex items-center gap-1.5 text-xs text-gray-500"><MapPin size={12} className="text-gray-400" />{s.location}</div>}
                     <div className="flex items-center gap-1.5 text-xs text-gray-500">
