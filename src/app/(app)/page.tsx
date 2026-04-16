@@ -3,51 +3,14 @@ import Avatar from "@/components/Avatar";
 import Badge from "@/components/Badge";
 import AttendanceButtons from "@/components/AttendanceButtons";
 import { createClient } from "@/lib/supabase/server";
-import { Bell, CalendarDays, MapPin, Users, ChevronRight, Mic2 } from "lucide-react";
-
-// 목업 데이터 (최근 소식)
-const recentPosts = [
-  {
-    id: 1,
-    author: "한충희",
-    tag: "공지",
-    tagVariant: "red" as const,
-    title: "4월 정기 합주 안내 및 셋리스트 제출 마감",
-    preview: "📌 정모 정보\n📅 4월 19일(토) 오후 7시\n📍 홍대 연습실",
-    time: "오늘 오전 10:22",
-    isPinned: true,
-  },
-  {
-    id: 2,
-    author: "솔아",
-    tag: "가입인사",
-    tagVariant: "green" as const,
-    title: "안녕하세요! 97년생 여자 보컬입니다",
-    preview: "잔잔한 어쿠스틱 발라드 좋아하고 같이 듀엣 부르실 분 찾아요 🎤",
-    time: "3월 28일 오전 8:28",
-    isPinned: false,
-  },
-  {
-    id: 3,
-    author: "버드나무",
-    tag: "모임후기",
-    tagVariant: "purple" as const,
-    title: "지난 주 합주 너무 재밌었어요!",
-    preview: "처음 참석했는데 분위기가 너무 따뜻하고 좋았습니다. 다음 주도 참석할게요!",
-    time: "4월 8일 오전 8:27",
-    isPinned: false,
-  },
-];
+import { Bell, CalendarDays, Users, ChevronRight, Mic2, UserPlus } from "lucide-react";
 
 export default async function HomePage() {
   const supabase = await createClient();
 
-  // 현재 로그인 유저
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  // 오늘 이후 가장 가까운 일정 1개 조회
+  // 다가오는 일정
   const today = new Date().toISOString().split("T")[0];
   const { data: schedules } = await supabase
     .from("schedules")
@@ -55,10 +18,9 @@ export default async function HomePage() {
     .gte("date", today)
     .order("date")
     .limit(1);
-
   const schedule = schedules?.[0] ?? null;
 
-  // 현재 유저의 참석 상태 조회
+  // 참석 상태
   let attendanceStatus = "undecided";
   if (schedule && user) {
     const { data: attendance } = await supabase
@@ -67,12 +29,10 @@ export default async function HomePage() {
       .eq("schedule_id", schedule.id)
       .eq("user_id", user.id)
       .maybeSingle();
-    if (attendance) {
-      attendanceStatus = attendance.status;
-    }
+    if (attendance) attendanceStatus = attendance.status;
   }
 
-  // 참석 인원 수 조회
+  // 참석 인원
   let attendeeCount = 0;
   if (schedule) {
     const { count } = await supabase
@@ -83,7 +43,18 @@ export default async function HomePage() {
     attendeeCount = count ?? 0;
   }
 
-  // 날짜 포맷 (YYYY-MM-DD → 한국어)
+  // 전체 멤버 수
+  const { count: memberCount } = await supabase
+    .from("users")
+    .select("*", { count: "exact", head: true });
+
+  // 최근 가입 멤버 (최신 3명)
+  const { data: recentMembers } = await supabase
+    .from("users")
+    .select("id, name, instruments, preferred_genre, bio, signature_song, created_at")
+    .order("created_at", { ascending: false })
+    .limit(3);
+
   function formatDate(dateStr: string): string {
     const date = new Date(dateStr + "T00:00:00");
     const month = date.getMonth() + 1;
@@ -91,6 +62,26 @@ export default async function HomePage() {
     const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
     const weekday = weekdays[date.getDay()];
     return `${month}월 ${day}일 (${weekday})`;
+  }
+
+  function formatJoinDate(dateStr: string): string {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const days = Math.floor(diff / 86400000);
+    if (days === 0) return "오늘 가입";
+    if (days < 7) return `${days}일 전 가입`;
+    const weeks = Math.floor(days / 7);
+    if (weeks < 5) return `${weeks}주 전 가입`;
+    return new Date(dateStr).toLocaleDateString("ko-KR", { month: "short", day: "numeric" }) + " 가입";
+  }
+
+  function getInstrumentIcon(instruments: string[] | null): string {
+    if (!instruments || instruments.length === 0) return "🎤";
+    const first = instruments[0];
+    if (first.includes("기타")) return "🎸";
+    if (first.includes("키보드") || first.includes("피아노")) return "🎹";
+    if (first.includes("드럼") || first.includes("퍼커션")) return "🥁";
+    if (first.includes("베이스")) return "🎵";
+    return "🎤";
   }
 
   return (
@@ -106,43 +97,25 @@ export default async function HomePage() {
       />
 
       <div className="space-y-0">
-        {/* 그룹 배너 */}
-        <div className="relative bg-gradient-to-br from-green-700 via-green-600 to-green-800 px-5 pt-5 pb-6">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-2xl">
-              🎤
-            </div>
-            <div>
-              <p className="font-bold text-white text-base leading-tight">길울림밴드</p>
-              <p className="text-green-200 text-xs mt-0.5">STREET RESONANCE</p>
-            </div>
-          </div>
-          <p className="text-sm text-green-100 leading-relaxed">
-            퇴근 후, 길 위에서 음악으로 이어지는 순간을 함께합니다.
+        {/* 그룹 배너 — 태그라인 + 실제 멤버 수만 표시 */}
+        <div className="relative bg-gradient-to-br from-green-700 via-green-600 to-green-800 px-5 pt-6 pb-7">
+          <p className="text-base text-green-100 leading-relaxed font-medium">
+            퇴근 후, 길 위에서 음악으로<br />이어지는 순간을 함께합니다.
           </p>
-          <div className="flex gap-2 mt-3">
-            <Badge variant="yellow">대중가요</Badge>
-            <Badge variant="yellow">인디</Badge>
-            <Badge variant="yellow">어쿠스틱</Badge>
-          </div>
-          {/* 멤버수 */}
-          <div className="flex items-center gap-1 mt-3">
-            <Users size={13} className="text-green-300" />
-            <span className="text-xs text-green-200">멤버 12명</span>
+          <div className="flex items-center gap-1.5 mt-4">
+            <Users size={14} className="text-green-300" />
+            <span className="text-sm font-bold text-white">멤버 {memberCount ?? 0}명</span>
           </div>
         </div>
 
         <div className="px-4 py-5 space-y-5">
-          {/* 다가오는 일정 카드 */}
+          {/* 다가오는 모임 */}
           <section>
             <div className="flex items-center justify-between mb-2.5">
               <div className="flex items-center gap-1.5">
                 <CalendarDays size={15} className="text-green-600" />
                 <h2 className="text-sm font-bold text-gray-800">다가오는 모임</h2>
               </div>
-              <button className="flex items-center gap-0.5 text-xs text-gray-400">
-                전체보기 <ChevronRight size={13} />
-              </button>
             </div>
 
             {schedule ? (
@@ -157,7 +130,16 @@ export default async function HomePage() {
                   <div className="flex items-center gap-2 text-xs text-gray-600">
                     <CalendarDays size={13} className="text-gray-400 shrink-0" />
                     {formatDate(schedule.date as string)}
+                    {(schedule.time as string | null) && (
+                      <span className="text-gray-400">{schedule.time as string}</span>
+                    )}
                   </div>
+                  {(schedule.location as string | null) && (
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <span className="text-gray-400">📍</span>
+                      {schedule.location as string}
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 text-xs text-gray-500">
                     <Users size={13} className="text-gray-400 shrink-0" />
                     참석 예정 {attendeeCount}명
@@ -184,37 +166,57 @@ export default async function HomePage() {
             )}
           </section>
 
-          {/* 최근 소식 */}
+          {/* 최근 소식 — 최근 가입 멤버 */}
           <section>
             <div className="flex items-center justify-between mb-2.5">
               <div className="flex items-center gap-1.5">
                 <Mic2 size={15} className="text-green-600" />
                 <h2 className="text-sm font-bold text-gray-800">최근 소식</h2>
               </div>
-              <button className="flex items-center gap-0.5 text-xs text-gray-400">
-                게시판 <ChevronRight size={13} />
-              </button>
             </div>
 
             <div className="space-y-2">
-              {recentPosts.map((post) => (
-                <button
-                  key={post.id}
-                  className="w-full rounded-xl border border-gray-200 bg-white p-4 text-left shadow-sm hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <Avatar name={post.author} size="sm" />
-                      <span className="text-xs font-medium text-gray-700">{post.author}</span>
-                      <Badge variant={post.tagVariant}>{post.tag}</Badge>
-                      {post.isPinned && <span className="text-[10px] text-red-500 font-bold">[필독]</span>}
+              {recentMembers && recentMembers.length > 0 ? (
+                recentMembers.map((member) => (
+                  <div
+                    key={member.id}
+                    className="w-full rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Avatar name={member.name} size="sm" />
+                        <span className="text-xs font-medium text-gray-700">{member.name}</span>
+                        <Badge variant="green">가입인사</Badge>
+                      </div>
+                      <span className="text-[10px] text-gray-400 shrink-0">
+                        {formatJoinDate(member.created_at as string)}
+                      </span>
                     </div>
-                    <span className="text-[10px] text-gray-400 shrink-0">{post.time}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm">{getInstrumentIcon(member.instruments as string[] | null)}</span>
+                      <p className="text-xs text-gray-600 line-clamp-1">
+                        {member.bio
+                          ? member.bio
+                          : member.signature_song
+                          ? `18번 곡: ${member.signature_song}`
+                          : (member.preferred_genre as string[] | null)?.slice(0, 2).join(", ") ?? "안녕하세요!"}
+                      </p>
+                    </div>
+                    {member.preferred_genre && (member.preferred_genre as string[]).length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {(member.preferred_genre as string[]).slice(0, 3).map((g) => (
+                          <Badge key={g} variant="yellow">{g}</Badge>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <p className="text-sm font-medium text-gray-900 mb-1 line-clamp-1">{post.title}</p>
-                  <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed whitespace-pre-line">{post.preview}</p>
-                </button>
-              ))}
+                ))
+              ) : (
+                <div className="rounded-xl border border-gray-200 bg-white px-4 py-6 text-center">
+                  <UserPlus size={24} className="text-gray-300 mx-auto mb-2" />
+                  <p className="text-sm text-gray-400">아직 가입한 멤버가 없어요</p>
+                </div>
+              )}
             </div>
           </section>
         </div>

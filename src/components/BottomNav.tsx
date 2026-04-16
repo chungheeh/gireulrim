@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 import { Home, Music2, Users, UserCircle2 } from "lucide-react";
 
 const tabs = [
-  { href: "/",        label: "홈",      Icon: Home        },
-  { href: "/songs",   label: "선곡",    Icon: Music2      },
-  { href: "/members", label: "멤버",    Icon: Users       },
-  { href: "/mypage",  label: "MY",      Icon: UserCircle2 },
+  { href: "/",         label: "홈",     Icon: Home        },
+  { href: "/busking",  label: "버스킹", Icon: Music2      },
+  { href: "/members",  label: "멤버",   Icon: Users       },
+  { href: "/mypage",   label: "MY",     Icon: UserCircle2 },
 ] as const;
 
 export default function BottomNav() {
