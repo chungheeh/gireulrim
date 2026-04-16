@@ -13,6 +13,7 @@ export interface Database {
         Row: {
           id: string;
           name: string;
+          email: string | null;
           role: UserRole;
           part: string | null;
           age: number | null;
@@ -26,6 +27,8 @@ export interface Database {
           bio: string | null;
           current_credits: number;
           can_give_lesson: boolean;
+          is_banned: boolean;
+          is_chat_banned: boolean;
           created_at: string;
         };
         Insert: {

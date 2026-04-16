@@ -51,6 +51,7 @@ export default function ChatPage() {
   const [sending, setSending] = useState(false);
   const [memberCount, setMemberCount] = useState(0);
   const [currentUserName, setCurrentUserName] = useState("");
+  const [isChatBanned, setIsChatBanned] = useState(false);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>("default");
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -64,8 +65,11 @@ export default function ChatPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setCurrentUserId(user.id);
-        const { data: profile } = await supabase.from("users").select("name").eq("id", user.id).single();
-        if (profile) setCurrentUserName(profile.name);
+        const { data: profile } = await supabase.from("users").select("name, is_chat_banned").eq("id", user.id).single();
+        if (profile) {
+          setCurrentUserName(profile.name);
+          setIsChatBanned(profile.is_chat_banned ?? false);
+        }
       }
 
       // 알림 권한 상태 확인
@@ -282,23 +286,31 @@ export default function ChatPage() {
       <div className="shrink-0 border-t border-gray-200 bg-white px-4 py-3"
         style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}>
         <div className="flex items-center gap-2">
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-            placeholder="메시지를 입력하세요..."
-            maxLength={500}
-            className="flex-1 rounded-full border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:border-green-400 focus:bg-white transition-colors"
-          />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim() || sending}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-600 hover:bg-green-700 transition-colors disabled:opacity-40"
-          >
-            <Send size={16} className="text-white ml-0.5" />
-          </button>
+          {isChatBanned ? (
+            <div className="flex-1 rounded-full border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-400 text-center">
+              채팅이 금지된 계정입니다
+            </div>
+          ) : (
+            <>
+              <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                placeholder="메시지를 입력하세요..."
+                maxLength={500}
+                className="flex-1 rounded-full border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:border-green-400 focus:bg-white transition-colors"
+              />
+              <button
+                onClick={handleSend}
+                disabled={!input.trim() || sending}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-600 hover:bg-green-700 transition-colors disabled:opacity-40"
+              >
+                <Send size={16} className="text-white ml-0.5" />
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

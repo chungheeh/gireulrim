@@ -64,9 +64,15 @@ export async function proxy(request: NextRequest) {
   {
     const { data: profile } = await supabase
       .from("users")
-      .select("available_days, role")
+      .select("available_days, role, is_banned")
       .eq("id", user.id)
       .single();
+
+    // 차단된 계정 → 로그인 페이지로
+    if (profile?.is_banned && !pathname.startsWith("/login")) {
+      await supabase.auth.signOut();
+      return NextResponse.redirect(new URL("/login?banned=1", request.url));
+    }
 
     const onboardingDone = Array.isArray(profile?.available_days) && profile.available_days.length > 0;
 
