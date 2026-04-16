@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import { createClient } from "@/lib/supabase/client";
-import { Coins, Upload, Check, Users, Mic2 } from "lucide-react";
+import { Coins, Upload, Check, Users, Mic2, AlertCircle } from "lucide-react";
 
 const BANK_INFO = {
   bank: "카카오뱅크",
@@ -188,6 +188,16 @@ export default function PaymentPage() {
                     <span className="font-bold text-green-700">9,000원</span>
                   </div>
                 )}
+              </div>
+            </section>
+
+            {/* 환불 정책 */}
+            <section className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5 flex gap-3">
+              <AlertCircle size={16} className="text-amber-500 mt-0.5 shrink-0" />
+              <div className="space-y-1 text-xs text-amber-800 leading-relaxed">
+                <p className="font-semibold">환불 정책 안내</p>
+                <p>✅ <span className="font-medium">전날 취소 시</span> — 참가비 100% 환불</p>
+                <p>❌ <span className="font-medium">당일 미참석 시</span> — 환불 불가</p>
               </div>
             </section>
 
