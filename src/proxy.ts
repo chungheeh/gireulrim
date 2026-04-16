@@ -59,15 +59,18 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // 프로필 미완성 → 온보딩으로 (이름이 없으면 신규 가입자)
-  if (!pathname.startsWith("/onboarding")) {
+  // 프로필 미완성 → 온보딩으로
+  // (트리거가 name은 자동 설정하므로 available_days로 온보딩 완료 여부 판단)
+  {
     const { data: profile } = await supabase
       .from("users")
-      .select("name, role")
+      .select("available_days, role")
       .eq("id", user.id)
       .single();
 
-    if (!profile?.name) {
+    const onboardingDone = Array.isArray(profile?.available_days) && profile.available_days.length > 0;
+
+    if (!onboardingDone && !pathname.startsWith("/onboarding")) {
       return NextResponse.redirect(new URL("/onboarding", request.url));
     }
 
