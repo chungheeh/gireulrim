@@ -68,6 +68,7 @@ export default function MyPageEditPage() {
   const supabase = createClient();
 
   const [form, setForm] = useState({
+    real_name: "",
     name: "",
     birth_year: "",
     location_city: "서울",
@@ -109,6 +110,7 @@ export default function MyPageEditPage() {
           const cityPart = CITIES.includes(locParts[0]) ? locParts[0] : "서울";
           const rest = CITIES.includes(locParts[0]) ? locParts.slice(1) : locParts;
           setForm({
+            real_name: (data as Record<string, unknown>).real_name as string ?? "",
             name: data.name ?? "",
             birth_year: data.age != null ? String(new Date().getFullYear() - data.age) : "",
             location_city: cityPart,
@@ -161,6 +163,7 @@ export default function MyPageEditPage() {
       }
 
       const { error: updateError } = await supabase.from("users").update({
+        real_name: form.real_name.trim() || null,
         name: form.name.trim(),
         age: form.birth_year ? new Date().getFullYear() - parseInt(form.birth_year) : null,
         location: [form.location_city, form.location_gu.trim(), form.location_station.trim()].filter(Boolean).join(" ") || null,
@@ -250,10 +253,23 @@ export default function MyPageEditPage() {
             <p className="mt-1 text-sm text-gray-500">길울림에서 사용하는 정보예요.</p>
           </div>
 
-          {/* 이름 */}
+          {/* 실명 */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-semibold text-gray-700">실명</label>
+            <input
+              type="text"
+              placeholder="예: 홍길동"
+              value={form.real_name}
+              onChange={(e) => setForm((f) => ({ ...f, real_name: e.target.value }))}
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500 transition-all"
+            />
+            <p className="text-xs text-gray-400">다른 멤버에게 공개되지 않아요</p>
+          </div>
+
+          {/* 닉네임 */}
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-gray-700">
-              이름 (닉네임) <span className="text-red-400">*</span>
+              닉네임 <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
@@ -262,6 +278,7 @@ export default function MyPageEditPage() {
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500 transition-all"
             />
+            <p className="text-xs text-gray-400">앱에 표시되는 이름이에요</p>
           </div>
 
           {/* 출생연도 */}
