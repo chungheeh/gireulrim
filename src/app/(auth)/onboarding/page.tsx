@@ -73,7 +73,9 @@ export default function OnboardingPage() {
     real_name: "",
     name: "",
     age: "",
-    location: "",
+    location_city: "서울",
+    location_gu: "",
+    location_station: "",
     contact: "",
     // Step 2 — 모임 스타일
     available_days: [] as AvailableDay[],
@@ -128,7 +130,7 @@ export default function OnboardingPage() {
         real_name: form.real_name.trim(),
         name: form.name.trim(),
         age: form.age ? parseInt(form.age) : null,
-        location: form.location.trim() || null,
+        location: [form.location_city, form.location_gu.trim(), form.location_station.trim()].filter(Boolean).join(" ") || null,
         contact: form.contact.trim() || null,
         available_days: form.available_days,
         instruments: form.instruments,
@@ -227,11 +229,29 @@ export default function OnboardingPage() {
             {/* 사는 곳 */}
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-gray-700">사는 곳</label>
+              <div className="flex gap-2">
+                <select
+                  value={form.location_city}
+                  onChange={(e) => setForm((f) => ({ ...f, location_city: e.target.value }))}
+                  className="w-28 shrink-0 rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-900 outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500 transition-all"
+                >
+                  {["서울", "경기", "인천", "부산", "대구", "광주", "대전", "울산", "세종", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주"].map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  placeholder="구 (예: 마포구)"
+                  value={form.location_gu}
+                  onChange={(e) => setForm((f) => ({ ...f, location_gu: e.target.value }))}
+                  className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500 transition-all"
+                />
+              </div>
               <input
                 type="text"
-                placeholder="예: 마포구, 성수동, 수원"
-                value={form.location}
-                onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
+                placeholder="가까운 역 (예: 합정역)"
+                value={form.location_station}
+                onChange={(e) => setForm((f) => ({ ...f, location_station: e.target.value }))}
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500 transition-all"
               />
             </div>
