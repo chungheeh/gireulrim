@@ -5,6 +5,8 @@ export type UserRole = "admin" | "member";
 export type AttendanceStatus = "attending" | "absent" | "undecided";
 export type CreditTransactionType = "deposit" | "withdraw";
 export type RefundStatus = "pending" | "approved" | "rejected";
+export type PaymentType = "정모비" | "버스킹/공연비";
+export type PaymentStatus = "pending" | "approved" | "rejected";
 
 export interface Database {
   public: {
@@ -145,6 +147,28 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["refund_requests"]["Row"], "id" | "created_at">;
         Update: Partial<Database["public"]["Tables"]["refund_requests"]["Insert"]>;
+        Relationships: [];
+      };
+      payment_proofs: {
+        Row: {
+          id: string;
+          user_id: string;
+          payment_type: PaymentType;
+          amount: number;
+          memo: string | null;
+          image_url: string | null;
+          status: PaymentStatus;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          payment_type: PaymentType;
+          amount: number;
+          memo?: string | null;
+          image_url?: string | null;
+          status?: PaymentStatus;
+        };
+        Update: Partial<Database["public"]["Tables"]["payment_proofs"]["Insert"]>;
         Relationships: [];
       };
       messages: {

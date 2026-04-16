@@ -154,8 +154,8 @@ export default async function MyPage() {
                 <Coins size={17} className="text-green-600" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-800">4월 회비 납부</p>
-                <p className="text-xs text-gray-400">계좌이체 후 입금 캡처 업로드</p>
+                <p className="text-sm font-semibold text-gray-800">정모/버스킹 비용 납부</p>
+                <p className="text-xs text-gray-400">정모비·버스킹 참가비 입금 캡처 업로드</p>
               </div>
             </div>
             <Link href="/mypage/payment" className="rounded-full bg-green-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-green-700 transition-colors">
