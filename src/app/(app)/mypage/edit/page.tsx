@@ -78,6 +78,7 @@ export default function MyPageEditPage() {
     instruments: [] as Instrument[],
     preferred_genre: [] as Genre[],
     vocal_range: "",
+    favorite_artist: "",
     signature_song: "",
     bio: "",
   });
@@ -118,6 +119,7 @@ export default function MyPageEditPage() {
             instruments: ((data as Record<string, unknown>).instruments as Instrument[]) ?? [],
             preferred_genre: (data.preferred_genre as Genre[]) ?? [],
             vocal_range: (data as Record<string, unknown>).vocal_range as string ?? "",
+            favorite_artist: (data as Record<string, unknown>).favorite_artist as string ?? "",
             signature_song: data.signature_song ?? "",
             bio: (data as Record<string, unknown>).bio as string ?? "",
           });
@@ -167,6 +169,7 @@ export default function MyPageEditPage() {
         instruments: form.instruments,
         preferred_genre: form.preferred_genre,
         vocal_range: form.vocal_range || null,
+        favorite_artist: form.favorite_artist.trim() || null,
         signature_song: form.signature_song.trim() || null,
         bio: form.bio.trim() || null,
         ...(profile_image_url ? { profile_image_url } : {}),
@@ -448,6 +451,18 @@ export default function MyPageEditPage() {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* 좋아하는 가수 */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-semibold text-gray-700">좋아하는 가수</label>
+            <input
+              type="text"
+              placeholder="예: 아이유, 나얼, 폴킴"
+              value={form.favorite_artist}
+              onChange={(e) => setForm((f) => ({ ...f, favorite_artist: e.target.value }))}
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500 transition-all"
+            />
           </div>
 
           {/* 18번 곡 */}
