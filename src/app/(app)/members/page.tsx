@@ -11,7 +11,7 @@ export default async function MembersPage() {
 
   const { data: members } = await supabase
     .from("users")
-    .select("id, name, instruments, preferred_genre, vocal_range, signature_song, bio, can_give_lesson, age, location, available_days")
+    .select("id, name, instruments, preferred_genre, vocal_range, signature_song, bio, can_give_lesson, age, location, available_days, role")
     .order("name");
 
   const memberList = members ?? [];

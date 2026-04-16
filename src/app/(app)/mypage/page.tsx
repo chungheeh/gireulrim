@@ -72,8 +72,19 @@ export default async function MyPage() {
     profile = data;
   }
 
-  // 목업 참석 횟수 (Supabase 연동 전)
-  const attendanceCount = 2;
+  // 이번 달 참석 횟수
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  let attendanceCount = 0;
+  if (user) {
+    const { count } = await supabase
+      .from("attendances")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("status", "attending")
+      .gte("created_at", monthStart);
+    attendanceCount = count ?? 0;
+  }
 
   return (
     <>
@@ -95,6 +106,7 @@ export default async function MyPage() {
                   )}
                 </div>
                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                  {profile?.role === "admin" && <Badge variant="yellow">모임장</Badge>}
                   {profile?.part && <Badge variant="yellow">{profile.part}</Badge>}
                   {profile?.can_give_lesson && <Badge variant="yellow">레슨 가능</Badge>}
                 </div>

@@ -17,6 +17,7 @@ export interface Member {
   age: number | null;
   location: string | null;
   available_days: string[] | null;
+  role: string | null;
 }
 
 function getInstrumentIcon(instruments: string[] | null): string {
@@ -83,6 +84,7 @@ function MemberDetail({ member, isMe, onClose }: MemberDetailProps) {
                 <span className="text-lg font-bold text-gray-900">{member.name}</span>
                 <span className="text-base">{icon}</span>
                 <Badge variant="green">{label}</Badge>
+                {member.role === "admin" && <Badge variant="yellow">모임장</Badge>}
                 {isMe && <Badge variant="gray">나</Badge>}
                 {member.can_give_lesson && <Badge variant="purple">레슨 가능</Badge>}
               </div>
@@ -202,6 +204,7 @@ export default function MembersClient({ members, currentUserId }: MembersClientP
                   <span className="font-bold text-gray-900">{me.name}</span>
                   <span className="text-base">{getInstrumentIcon(me.instruments)}</span>
                   <Badge variant="green">{getMainLabel(me.instruments)}</Badge>
+                  {me.role === "admin" && <Badge variant="yellow">모임장</Badge>}
                   <Badge variant="gray">나</Badge>
                 </div>
                 {me.bio && <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{me.bio}</p>}
@@ -256,6 +259,7 @@ export default function MembersClient({ members, currentUserId }: MembersClientP
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-sm font-semibold text-gray-900">{member.name}</span>
                     <span className="text-sm">{getInstrumentIcon(member.instruments)}</span>
+                    {member.role === "admin" && <Badge variant="yellow">모임장</Badge>}
                     {member.can_give_lesson && <Badge variant="purple">레슨 가능</Badge>}
                   </div>
                   {member.bio ? (
