@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Users, CheckSquare, Music2, Home } from "lucide-react";
+import { CalendarDays, Users, CheckSquare, Music2, Home, MessageCircle } from "lucide-react";
 
 const adminTabs = [
   { href: "/admin/schedules", label: "정모 관리", Icon: CalendarDays },
   { href: "/admin/members",   label: "회원 관리", Icon: Users },
   { href: "/admin/attendance",label: "참석 현황", Icon: CheckSquare },
   { href: "/admin/songs",     label: "선곡 확정", Icon: Music2 },
+  { href: "/admin/messages",  label: "메시지",    Icon: MessageCircle },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

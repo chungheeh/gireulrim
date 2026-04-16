@@ -153,6 +153,25 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["messages"]["Insert"]>;
         Relationships: [];
       };
+      direct_messages: {
+        Row: {
+          id: string;
+          sender_id: string;
+          receiver_id: string;
+          content: string;
+          created_at: string;
+          read_at: string | null;
+        };
+        Insert: {
+          sender_id: string;
+          receiver_id: string;
+          content: string;
+          id?: string;
+          read_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["direct_messages"]["Insert"]>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

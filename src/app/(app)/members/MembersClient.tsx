@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Avatar from "@/components/Avatar";
 import Badge from "@/components/Badge";
-import { Search, GraduationCap, X, Music2, Heart, Mic2 } from "lucide-react";
+import { Search, GraduationCap, X, Music2, Heart, Mic2, MessageCircle } from "lucide-react";
 
 export interface Member {
   id: string;
@@ -51,7 +52,9 @@ interface MemberDetailProps {
 }
 
 function MemberDetail({ member, isMe, onClose }: MemberDetailProps) {
+  const router = useRouter();
   const hasLessonButton = member.can_give_lesson && !isMe;
+  const hasAdminDM = member.role === "admin" && !isMe;
   const icon = getInstrumentIcon(member.instruments);
   const label = getMainLabel(member.instruments);
 
@@ -154,13 +157,24 @@ function MemberDetail({ member, isMe, onClose }: MemberDetailProps) {
           </div>
         </div>
 
-        {/* 레슨 요청 버튼 */}
-        {hasLessonButton && (
-          <div className="shrink-0 border-t border-gray-100 px-5 pt-3 pb-[max(20px,env(safe-area-inset-bottom))]">
-            <button className="w-full rounded-2xl bg-purple-600 py-3.5 text-sm font-bold text-white hover:bg-purple-700 transition-colors">
-              <GraduationCap size={16} className="inline mr-1.5 -mt-0.5" />
-              포인트 레슨 요청하기
-            </button>
+        {/* 버튼 영역 */}
+        {(hasAdminDM || hasLessonButton) && (
+          <div className="shrink-0 border-t border-gray-100 px-5 pt-3 pb-5 space-y-2">
+            {hasAdminDM && (
+              <button
+                onClick={() => { onClose(); router.push(`/dm/${member.id}`); }}
+                className="w-full rounded-2xl bg-green-600 py-3.5 text-sm font-bold text-white hover:bg-green-700 transition-colors"
+              >
+                <MessageCircle size={16} className="inline mr-1.5 -mt-0.5" />
+                모임장에게 메시지 보내기
+              </button>
+            )}
+            {hasLessonButton && (
+              <button className="w-full rounded-2xl bg-purple-600 py-3.5 text-sm font-bold text-white hover:bg-purple-700 transition-colors">
+                <GraduationCap size={16} className="inline mr-1.5 -mt-0.5" />
+                포인트 레슨 요청하기
+              </button>
+            )}
           </div>
         )}
       </div>
