@@ -85,14 +85,33 @@ export default function OnboardingPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [stepError, setStepError] = useState("");
 
   // 토글 헬퍼
   function toggleItem<T>(arr: T[], item: T): T[] {
     return arr.includes(item) ? arr.filter((x) => x !== item) : [...arr, item];
   }
 
-  const step1Valid = form.name.trim().length >= 1;
-  const step2Valid = form.available_days.length > 0;
+  function validateStep(s: number): string {
+    if (s === 1) {
+      if (!form.name.trim()) return "이름(닉네임)을 입력해 주세요.";
+      if (!form.age || parseInt(form.age) < 1) return "나이를 입력해 주세요.";
+      if (!form.contact.trim()) return "연락처를 입력해 주세요.";
+    }
+    if (s === 2) {
+      if (form.available_days.length === 0) return "가능한 모임 날짜를 1개 이상 선택해 주세요.";
+      if (form.instruments.length === 0) return "악기를 1개 이상 선택해 주세요. (없으면 '없음(보컬 전용)' 선택)";
+    }
+    if (s === 3) {
+      if (form.preferred_genre.length === 0) return "선호 장르를 1개 이상 선택해 주세요.";
+      if (!form.vocal_range) return "음역대를 선택해 주세요.";
+    }
+    return "";
+  }
+
+  const step1Valid = !validateStep(1);
+  const step2Valid = !validateStep(2);
+  const step3Valid = !validateStep(3);
 
   async function handleSubmit() {
     setLoading(true);
@@ -174,7 +193,7 @@ export default function OnboardingPage() {
 
             {/* 나이 */}
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-700">나이</label>
+              <label className="text-sm font-semibold text-gray-700">나이 <span className="text-red-400">*</span></label>
               <input
                 type="number"
                 placeholder="예: 28"
@@ -198,7 +217,7 @@ export default function OnboardingPage() {
 
             {/* 연락처 */}
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-700">연락처</label>
+              <label className="text-sm font-semibold text-gray-700">연락처 <span className="text-red-400">*</span></label>
               <input
                 type="tel"
                 placeholder="예: 010-1234-5678"
@@ -267,7 +286,7 @@ export default function OnboardingPage() {
             {/* 다룰 줄 아는 악기 */}
             <div className="space-y-2">
               <label className="text-sm font-semibold text-gray-700">
-                다룰 줄 아는 악기
+                다룰 줄 아는 악기 <span className="text-red-400">*</span>
                 <span className="ml-1 text-xs font-normal text-gray-400">(복수 선택)</span>
               </label>
               <div className="flex flex-wrap gap-2">
@@ -301,7 +320,7 @@ export default function OnboardingPage() {
             {/* 선호 장르 */}
             <div className="space-y-2">
               <label className="text-sm font-semibold text-gray-700">
-                선호 장르
+                선호 장르 <span className="text-red-400">*</span>
                 <span className="ml-1 text-xs font-normal text-gray-400">(복수 선택)</span>
               </label>
               <div className="flex flex-wrap gap-2">
@@ -324,7 +343,7 @@ export default function OnboardingPage() {
 
             {/* 음역대 */}
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-700">음역대</label>
+              <label className="text-sm font-semibold text-gray-700">음역대 <span className="text-red-400">*</span></label>
               <div className="space-y-2">
                 {VOCAL_RANGES.map((r) => (
                   <button
@@ -382,19 +401,33 @@ export default function OnboardingPage() {
         className="sticky bottom-0 border-t border-gray-100 bg-white px-4 py-4"
         style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
       >
+        {stepError && (
+          <p className="mb-3 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-xs text-red-600 font-medium">
+            ⚠️ {stepError}
+          </p>
+        )}
         {step < 3 ? (
           <button
             type="button"
-            onClick={() => setStep((s) => s + 1)}
-            disabled={step === 1 ? !step1Valid : !step2Valid}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-green-600 py-4 text-sm font-bold text-white disabled:opacity-40 hover:bg-green-700 active:scale-[0.98] transition-all"
+            onClick={() => {
+              const msg = validateStep(step);
+              if (msg) { setStepError(msg); return; }
+              setStepError("");
+              setStep((s) => s + 1);
+            }}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-green-600 py-4 text-sm font-bold text-white hover:bg-green-700 active:scale-[0.98] transition-all"
           >
             다음 <ChevronRight size={16} />
           </button>
         ) : (
           <button
             type="button"
-            onClick={handleSubmit}
+            onClick={() => {
+              const msg = validateStep(3);
+              if (msg) { setStepError(msg); return; }
+              setStepError("");
+              handleSubmit();
+            }}
             disabled={loading}
             className="w-full rounded-2xl bg-green-600 py-4 text-sm font-bold text-white disabled:opacity-60 hover:bg-green-700 active:scale-[0.98] transition-all"
           >
@@ -404,7 +437,7 @@ export default function OnboardingPage() {
         {step > 1 && (
           <button
             type="button"
-            onClick={() => setStep((s) => s - 1)}
+            onClick={() => { setStepError(""); setStep((s) => s - 1); }}
             className="mt-2 w-full py-2 text-xs text-gray-400"
           >
             이전으로
