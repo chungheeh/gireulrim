@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, Camera } from "lucide-react";
 
 // ─── 상수 ───────────────────────────────────────────────
 const INSTRUMENTS = [
@@ -69,7 +69,7 @@ export default function MyPageEditPage() {
 
   const [form, setForm] = useState({
     name: "",
-    age: "",
+    birth_year: "",
     location_city: "서울",
     location_gu: "",
     location_station: "",
@@ -81,6 +81,8 @@ export default function MyPageEditPage() {
     signature_song: "",
     bio: "",
   });
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
   const [error, setError] = useState("");
@@ -107,7 +109,7 @@ export default function MyPageEditPage() {
           const rest = CITIES.includes(locParts[0]) ? locParts.slice(1) : locParts;
           setForm({
             name: data.name ?? "",
-            age: data.age != null ? String(data.age) : "",
+            birth_year: data.age != null ? String(new Date().getFullYear() - data.age) : "",
             location_city: cityPart,
             location_gu: rest[0] ?? "",
             location_station: rest[1] ?? "",
@@ -119,6 +121,9 @@ export default function MyPageEditPage() {
             signature_song: data.signature_song ?? "",
             bio: (data as Record<string, unknown>).bio as string ?? "",
           });
+          if ((data as Record<string, unknown>).profile_image_url) {
+            setPhotoPreview((data as Record<string, unknown>).profile_image_url as string);
+          }
         }
       } catch {
         // 로드 실패 시 빈 폼으로 진행
@@ -140,9 +145,22 @@ export default function MyPageEditPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("로그인 상태가 아닙니다.");
 
+      // 새 사진 있으면 업로드
+      let profile_image_url: string | undefined;
+      if (photoFile) {
+        const ext = photoFile.name.split(".").pop() ?? "jpg";
+        const path = `${user.id}/profile.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("profiles")
+          .upload(path, photoFile, { upsert: true });
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from("profiles").getPublicUrl(path);
+        profile_image_url = urlData.publicUrl;
+      }
+
       const { error: updateError } = await supabase.from("users").update({
         name: form.name.trim(),
-        age: form.age ? parseInt(form.age) : null,
+        age: form.birth_year ? new Date().getFullYear() - parseInt(form.birth_year) : null,
         location: [form.location_city, form.location_gu.trim(), form.location_station.trim()].filter(Boolean).join(" ") || null,
         contact: form.contact.trim() || null,
         available_days: form.available_days,
@@ -151,6 +169,7 @@ export default function MyPageEditPage() {
         vocal_range: form.vocal_range || null,
         signature_song: form.signature_song.trim() || null,
         bio: form.bio.trim() || null,
+        ...(profile_image_url ? { profile_image_url } : {}),
       }).eq("id", user.id);
 
       if (updateError) throw updateError;
@@ -190,6 +209,37 @@ export default function MyPageEditPage() {
       {/* 폼 영역 */}
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-8">
 
+        {/* 프로필 사진 */}
+        <div className="space-y-3">
+          <h2 className="text-lg font-bold text-gray-900">프로필 사진</h2>
+          <label className="block cursor-pointer">
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/heic"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setPhotoFile(file);
+                setPhotoPreview(URL.createObjectURL(file));
+              }}
+            />
+            {photoPreview ? (
+              <div className="relative w-24 h-24">
+                <img src={photoPreview} alt="프로필 사진" className="w-24 h-24 rounded-full object-cover" />
+                <div className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-green-600 border-2 border-white">
+                  <Camera size={13} className="text-white" />
+                </div>
+              </div>
+            ) : (
+              <div className="flex h-24 w-24 flex-col items-center justify-center rounded-full border-2 border-dashed border-gray-200 bg-gray-50 hover:border-green-400 transition-colors">
+                <Camera size={20} className="text-gray-400" />
+                <span className="mt-1 text-[10px] text-gray-400">사진 추가</span>
+              </div>
+            )}
+          </label>
+        </div>
+
         {/* 기본 정보 */}
         <div className="space-y-6">
           <div>
@@ -211,16 +261,19 @@ export default function MyPageEditPage() {
             />
           </div>
 
-          {/* 나이 */}
+          {/* 출생연도 */}
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-gray-700">나이</label>
-            <input
-              type="number"
-              placeholder="예: 28"
-              value={form.age}
-              onChange={(e) => setForm((f) => ({ ...f, age: e.target.value }))}
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500 transition-all"
-            />
+            <label className="text-sm font-semibold text-gray-700">출생연도</label>
+            <select
+              value={form.birth_year}
+              onChange={(e) => setForm((f) => ({ ...f, birth_year: e.target.value }))}
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500 transition-all"
+            >
+              <option value="">선택해 주세요</option>
+              {Array.from({ length: 20 }, (_, i) => 2006 - i).map(y => (
+                <option key={y} value={y}>{y}년생 (만 {new Date().getFullYear() - y}세)</option>
+              ))}
+            </select>
           </div>
 
           {/* 사는 곳 */}

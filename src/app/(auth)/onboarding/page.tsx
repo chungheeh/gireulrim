@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Mic2, ChevronRight, Check } from "lucide-react";
+import { Mic2, ChevronRight, Check, Camera } from "lucide-react";
 
 // ─── 상수 ───────────────────────────────────────────────
 const INSTRUMENTS = [
@@ -72,7 +72,7 @@ export default function OnboardingPage() {
     // Step 1 — 기본 정보
     real_name: "",
     name: "",
-    age: "",
+    birth_year: "",
     location_city: "서울",
     location_gu: "",
     location_station: "",
@@ -87,6 +87,8 @@ export default function OnboardingPage() {
     signature_song: "",
     bio: "",
   });
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [stepError, setStepError] = useState("");
@@ -100,7 +102,7 @@ export default function OnboardingPage() {
     if (s === 1) {
       if (!form.real_name.trim()) return "실명을 입력해 주세요.";
       if (!form.name.trim()) return "닉네임을 입력해 주세요.";
-      if (!form.age || parseInt(form.age) < 1) return "나이를 입력해 주세요.";
+      if (!form.birth_year) return "출생연도를 선택해 주세요.";
       if (!form.contact.trim()) return "연락처를 입력해 주세요.";
     }
     if (s === 2) {
@@ -111,12 +113,16 @@ export default function OnboardingPage() {
       if (form.preferred_genre.length === 0) return "선호 장르를 1개 이상 선택해 주세요.";
       if (!form.vocal_range) return "음역대를 선택해 주세요.";
     }
+    if (s === 4) {
+      if (!photoFile) return "프로필 사진을 1장 이상 첨부해 주세요.";
+    }
     return "";
   }
 
   const step1Valid = !validateStep(1);
   const step2Valid = !validateStep(2);
   const step3Valid = !validateStep(3);
+  const step4Valid = !validateStep(4);
 
   async function handleSubmit() {
     setLoading(true);
@@ -125,11 +131,24 @@ export default function OnboardingPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("로그인 상태가 아닙니다.");
 
+      // 사진 업로드
+      let profile_image_url: string | null = null;
+      if (photoFile) {
+        const ext = photoFile.name.split(".").pop() ?? "jpg";
+        const path = `${user.id}/profile.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("profiles")
+          .upload(path, photoFile, { upsert: true });
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from("profiles").getPublicUrl(path);
+        profile_image_url = urlData.publicUrl;
+      }
+
       const { error: upsertError } = await supabase.from("users").upsert({
         id: user.id,
         real_name: form.real_name.trim(),
         name: form.name.trim(),
-        age: form.age ? parseInt(form.age) : null,
+        age: form.birth_year ? new Date().getFullYear() - parseInt(form.birth_year) : null,
         location: [form.location_city, form.location_gu.trim(), form.location_station.trim()].filter(Boolean).join(" ") || null,
         contact: form.contact.trim() || null,
         available_days: form.available_days,
@@ -139,6 +158,7 @@ export default function OnboardingPage() {
         favorite_artist: form.favorite_artist.trim() || null,
         signature_song: form.signature_song.trim() || null,
         bio: form.bio.trim() || null,
+        profile_image_url,
       });
 
       if (upsertError) throw upsertError;
@@ -159,10 +179,10 @@ export default function OnboardingPage() {
             <Mic2 size={15} className="text-white" />
           </div>
           <span className="font-bold text-gray-900">길울림 가입 정보</span>
-          <span className="ml-auto text-xs text-gray-400">{step} / 3</span>
+          <span className="ml-auto text-xs text-gray-400">{step} / 4</span>
         </div>
         <div className="mt-2.5 flex gap-1">
-          {[1, 2, 3].map((s) => (
+          {[1, 2, 3, 4].map((s) => (
             <div
               key={s}
               className={`h-1 flex-1 rounded-full transition-all duration-300 ${
@@ -214,16 +234,20 @@ export default function OnboardingPage() {
               <p className="text-xs text-gray-400">앱에 표시되는 이름이에요</p>
             </div>
 
-            {/* 나이 */}
+            {/* 출생연도 */}
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-700">나이 <span className="text-red-400">*</span></label>
-              <input
-                type="number"
-                placeholder="예: 28"
-                value={form.age}
-                onChange={(e) => setForm((f) => ({ ...f, age: e.target.value }))}
-                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500 transition-all"
-              />
+              <label className="text-sm font-semibold text-gray-700">출생연도 <span className="text-red-400">*</span></label>
+              <select
+                value={form.birth_year}
+                onChange={(e) => setForm((f) => ({ ...f, birth_year: e.target.value }))}
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500 transition-all"
+              >
+                <option value="">선택해 주세요</option>
+                {Array.from({ length: 20 }, (_, i) => 2006 - i).map(y => (
+                  <option key={y} value={y}>{y}년생 (만 {new Date().getFullYear() - y}세)</option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-400">만 20세~39세 가입 가능</p>
             </div>
 
             {/* 사는 곳 */}
@@ -447,6 +471,56 @@ export default function OnboardingPage() {
             )}
           </div>
         )}
+
+        {/* ── Step 4: 프로필 사진 ── */}
+        {step === 4 && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">나를 표현하는 사진 📸</h2>
+              <p className="mt-1 text-sm text-gray-500">멤버들에게 보여질 프로필 사진을 올려 주세요.</p>
+            </div>
+
+            {/* 사진 미리보기 / 업로드 버튼 */}
+            <label className="block cursor-pointer">
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/heic"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setPhotoFile(file);
+                  setPhotoPreview(URL.createObjectURL(file));
+                }}
+              />
+              {photoPreview ? (
+                <div className="relative">
+                  <img
+                    src={photoPreview}
+                    alt="프로필 미리보기"
+                    className="h-64 w-full rounded-2xl object-cover"
+                  />
+                  <div className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-xl bg-black/50 px-3 py-1.5 text-xs text-white">
+                    <Camera size={13} />
+                    사진 변경
+                  </div>
+                </div>
+              ) : (
+                <div className="flex h-64 w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 hover:border-green-400 hover:bg-green-50 transition-colors">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+                    <Camera size={24} className="text-gray-400" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-semibold text-gray-600">사진 추가 <span className="text-red-400">*</span></p>
+                    <p className="mt-0.5 text-xs text-gray-400">JPG, PNG, HEIC 가능 · 최대 5MB</p>
+                  </div>
+                </div>
+              )}
+            </label>
+
+            <p className="text-xs text-gray-400 text-center">본인 사진, 캐릭터, 닉네임 카드 등 자유롭게 올려 주세요</p>
+          </div>
+        )}
       </div>
 
       {/* 하단 버튼 */}
@@ -459,7 +533,7 @@ export default function OnboardingPage() {
             ⚠️ {stepError}
           </p>
         )}
-        {step < 3 ? (
+        {step < 4 ? (
           <button
             type="button"
             onClick={() => {
@@ -476,7 +550,7 @@ export default function OnboardingPage() {
           <button
             type="button"
             onClick={() => {
-              const msg = validateStep(3);
+              const msg = validateStep(4);
               if (msg) { setStepError(msg); return; }
               setStepError("");
               handleSubmit();

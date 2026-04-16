@@ -20,6 +20,7 @@ export interface Member {
   location: string | null;
   available_days: string[] | null;
   role: string | null;
+  profile_image_url: string | null;
 }
 
 function getInstrumentIcon(instruments: string[] | null): string {
@@ -82,7 +83,7 @@ function MemberDetail({ member, isMe, onClose }: MemberDetailProps) {
         <div className={`flex-1 overflow-y-auto px-5 py-2 space-y-5 ${!hasLessonButton ? "pb-[max(20px,env(safe-area-inset-bottom))]" : ""}`}>
           {/* 프로필 헤더 */}
           <div className="flex items-center gap-4">
-            <Avatar name={member.name} size="lg" />
+            <Avatar name={member.name} src={member.profile_image_url ?? undefined} size="lg" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-lg font-bold text-gray-900">{member.name}</span>
@@ -224,7 +225,7 @@ export default function MembersClient({ members, currentUserId }: MembersClientP
             onClick={() => setSelected(me)}
           >
             <div className="flex items-center gap-3">
-              <Avatar name={me.name} size="lg" />
+              <Avatar name={me.name} src={me.profile_image_url ?? undefined} size="lg" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="font-bold text-gray-900">{me.name}</span>
@@ -280,7 +281,7 @@ export default function MembersClient({ members, currentUserId }: MembersClientP
                 onClick={() => setSelected(member)}
                 className="flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-gray-50 transition-colors"
               >
-                <Avatar name={member.name} size="md" />
+                <Avatar name={member.name} src={member.profile_image_url ?? undefined} size="md" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-sm font-semibold text-gray-900">{member.name}</span>

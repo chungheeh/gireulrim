@@ -31,6 +31,7 @@ export interface Database {
           can_give_lesson: boolean;
           is_banned: boolean;
           is_chat_banned: boolean;
+          profile_image_url: string | null;
           created_at: string;
         };
         Insert: {
@@ -51,6 +52,7 @@ export interface Database {
           bio?: string | null;
           current_credits?: number;
           can_give_lesson?: boolean;
+          profile_image_url?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["users"]["Insert"]>;
         Relationships: [];
