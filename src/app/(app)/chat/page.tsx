@@ -103,7 +103,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-gray-50">
+    <div className="fixed inset-0 z-[100] flex flex-col bg-gray-50">
       {/* 헤더 */}
       <div className="shrink-0 flex items-center gap-3 bg-white border-b border-gray-200 px-4 py-3"
         style={{ paddingTop: "max(12px, env(safe-area-inset-top))" }}>
