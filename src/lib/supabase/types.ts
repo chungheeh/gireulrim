@@ -13,6 +13,7 @@ export interface Database {
         Row: {
           id: string;
           name: string;
+          real_name: string | null;
           email: string | null;
           role: UserRole;
           part: string | null;
@@ -35,6 +36,7 @@ export interface Database {
         Insert: {
           id: string;
           name: string;
+          real_name?: string | null;
           role?: UserRole;
           part?: string | null;
           age?: number | null;

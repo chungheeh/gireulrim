@@ -70,6 +70,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
     // Step 1 — 기본 정보
+    real_name: "",
     name: "",
     age: "",
     location: "",
@@ -95,7 +96,8 @@ export default function OnboardingPage() {
 
   function validateStep(s: number): string {
     if (s === 1) {
-      if (!form.name.trim()) return "이름(닉네임)을 입력해 주세요.";
+      if (!form.real_name.trim()) return "실명을 입력해 주세요.";
+      if (!form.name.trim()) return "닉네임을 입력해 주세요.";
       if (!form.age || parseInt(form.age) < 1) return "나이를 입력해 주세요.";
       if (!form.contact.trim()) return "연락처를 입력해 주세요.";
     }
@@ -123,6 +125,7 @@ export default function OnboardingPage() {
 
       const { error: upsertError } = await supabase.from("users").upsert({
         id: user.id,
+        real_name: form.real_name.trim(),
         name: form.name.trim(),
         age: form.age ? parseInt(form.age) : null,
         location: form.location.trim() || null,
@@ -179,18 +182,34 @@ export default function OnboardingPage() {
               <p className="mt-1 text-sm text-gray-500">길울림에서 사용할 기본 정보를 입력해 주세요.</p>
             </div>
 
-            {/* 이름 */}
+            {/* 실명 */}
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-gray-700">
-                이름 (닉네임) <span className="text-red-400">*</span>
+                실명 <span className="text-red-400">*</span>
               </label>
               <input
                 type="text"
-                placeholder="예: 솔아, 버드나무, 홍길동"
+                placeholder="예: 홍길동"
+                value={form.real_name}
+                onChange={(e) => setForm((f) => ({ ...f, real_name: e.target.value }))}
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500 transition-all"
+              />
+              <p className="text-xs text-gray-400">운영진 확인용 · 다른 멤버에게 공개되지 않아요</p>
+            </div>
+
+            {/* 닉네임 */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-gray-700">
+                닉네임 <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="예: 솔아, 버드나무, 달빛"
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500 transition-all"
               />
+              <p className="text-xs text-gray-400">앱에 표시되는 이름이에요</p>
             </div>
 
             {/* 나이 */}

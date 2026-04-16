@@ -9,6 +9,7 @@ import Badge from "@/components/Badge";
 interface Member {
   id: string;
   name: string;
+  real_name: string | null;
   email: string | null;
   role: "admin" | "member";
   part: string | null;
@@ -35,7 +36,7 @@ export default function AdminMembersPage() {
     setLoading(true);
     const { data } = await supabase
       .from("users")
-      .select("id, name, email, role, part, age, location, available_days, instruments, preferred_genre, is_banned, is_chat_banned, created_at")
+      .select("id, name, real_name, email, role, part, age, location, available_days, instruments, preferred_genre, is_banned, is_chat_banned, created_at")
       .order("created_at", { ascending: false });
     setMembers((data as Member[]) ?? []);
     setLoading(false);
@@ -117,6 +118,9 @@ export default function AdminMembersPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-sm font-semibold text-gray-900">{member.name}</span>
+                    {member.real_name && (
+                      <span className="text-xs text-gray-400">({member.real_name})</span>
+                    )}
                     <Badge variant={member.role === "admin" ? "red" : "gray"}>
                       {member.role === "admin" ? "관리자" : "멤버"}
                     </Badge>
