@@ -23,6 +23,7 @@ export interface Database {
           instruments: string[] | null;
           preferred_genre: string[] | null;
           vocal_range: string | null;
+          favorite_artist: string | null;
           signature_song: string | null;
           bio: string | null;
           current_credits: number;

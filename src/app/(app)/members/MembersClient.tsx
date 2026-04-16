@@ -12,6 +12,7 @@ export interface Member {
   instruments: string[] | null;
   preferred_genre: string[] | null;
   vocal_range: string | null;
+  favorite_artist: string | null;
   signature_song: string | null;
   bio: string | null;
   can_give_lesson: boolean;
@@ -106,6 +107,17 @@ function MemberDetail({ member, isMe, onClose }: MemberDetailProps) {
 
           {/* 정보 */}
           <div className="space-y-2.5">
+            {member.favorite_artist && (
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-pink-50">
+                  <span className="text-sm">🎤</span>
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-400">좋아하는 가수</p>
+                  <p className="text-sm font-medium text-gray-800">{member.favorite_artist}</p>
+                </div>
+              </div>
+            )}
             {member.signature_song && (
               <div className="flex items-center gap-2.5">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-50">
